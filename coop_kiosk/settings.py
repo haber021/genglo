@@ -276,25 +276,3 @@ LOGGING = {
     },
 }
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))
-EMAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.environ.get('MAIL_USERNAME', 'habervincent21@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('MAIL_PASSWORD', 'nvli tbsz atiz mqwc')
-DEFAULT_FROM_EMAIL = os.environ.get('MAIL_DEFAULT_SENDER', 'Genglo Printing Services <habervincent21@gmail.com>')
-
-# Email performance optimizations for faster OTP delivery
-EMAIL_TIMEOUT = 10  # Connection timeout in seconds (reduced from default 30)
-EMAIL_USE_LOCALTIME = True  # Use local timezone for email timestamps
-# Note: Django's SMTP backend doesn't support connection pooling natively,
-# but we use threading for async sending which provides similar benefits
-
-# Daily Report Email Configuration - Admin email that receives daily reports
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'habervincent21@gmail.com')
-DAILY_REPORT_EMAIL = os.environ.get('DAILY_REPORT_EMAIL', ADMIN_EMAIL)
-
-# Email Security - List of email usernames to mask in email headers for security
-# These usernames will be hidden in the "from" field of sent emails
-MASKED_EMAIL_USERNAMES = ['habervincent21']
