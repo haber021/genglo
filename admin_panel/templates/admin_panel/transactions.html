@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction History | Genglo Printing Services</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --dark: #0f172a;
+      --brand: #1f7a3a;
+      --accent: #0b5f3a;
+      --muted: #94a3b8;
+      --panel: #ffffff;
+      --gradient: linear-gradient(135deg, #1f7a3a 0%, #0b5f3a 40%, #0d9488 100%);
+    }
+
+    body {
+      background: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    .super-nav {
+      background: var(--dark);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.4);
+    }
+
+    .nav-pill {
+      border-radius: 999px;
+      padding: 8px 18px;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .nav-pill.active, .nav-pill:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    .hero-card {
+      background: var(--gradient);
+      color: #fff;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 25px 55px rgba(15,23,42,0.35);
+    }
+
+    .stat-card {
+      border: none;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 18px 36px rgba(15,23,42,0.08);
+      background: var(--panel);
+      height: 100%;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #fff;
+    }
+
+    .stat-title {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .table-card {
+      border-radius: 20px;
+      padding: 20px;
+      background: var(--panel);
+      box-shadow: 0 15px 30px rgba(15,23,42,0.07);
+    }
+
+    .table-card table {
+      font-size: 0.9rem;
+    }
+
+    .table-card thead {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .badge-payment {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .badge-debit {
+      background: #d1fae5;
+      color: var(--accent);
+    }
+
+
+    .badge-cash {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-status {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .badge-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-cancelled {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .transaction-details {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+      font-size: 0.85rem;
+    }
+
+    .transaction-details-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .transaction-details-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .detail-value {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .items-list {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .item-row {
+      padding: 4px 0;
+      font-size: 0.85rem;
+    }
+
+    .expand-btn {
+      cursor: pointer;
+      color: var(--brand);
+    }
+
+    .expand-btn:hover {
+      color: var(--accent);
+    }
+
+    /* Custom Logout Confirmation Modal */
+    #logoutConfirmModal {
+      z-index: 9999 !important;
+    }
+    #logoutConfirmModal .modal-dialog {
+      max-width: 480px;
+      margin: 10vh auto;
+      display: flex;
+      align-items: center;
+      min-height: calc(100vh - 20vh);
+    }
+    #logoutConfirmModal .modal-content {
+      border-radius: 18px;
+      border: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    #logoutConfirmModal .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9998 !important;
+    }
+    #logoutConfirmModal .modal-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 2px solid #dee2e6;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #logoutConfirmModal .modal-header .modal-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+    }
+    #logoutConfirmModal .modal-header .modal-title i {
+      color: #ff9800;
+      font-size: 1.8rem;
+    }
+    #logoutConfirmModal .modal-body {
+      padding: 32px;
+      text-align: center;
+    }
+    #logoutConfirmModal .modal-body .warning-icon {
+      font-size: 4rem;
+      color: #ff9800;
+      margin-bottom: 20px;
+      display: block;
+    }
+    #logoutConfirmModal .modal-body p {
+      font-size: 1.1rem;
+      color: #495057;
+      line-height: 1.6;
+      margin: 0;
+      font-weight: 400;
+    }
+    #logoutConfirmModal .modal-footer {
+      border-top: 2px solid #e9ecef;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      background: #f8f9fa;
+    }
+    #logoutConfirmModal .modal-footer .btn {
+      min-width: 120px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    #logoutConfirmModal .modal-footer .btn-cancel {
+      background: #6c757d;
+      border: 2px solid #6c757d;
+      color: white;
+    }
+    #logoutConfirmModal .modal-footer .btn-cancel:hover {
+      background: #5a6268;
+      border-color: #5a6268;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+    #logoutConfirmModal .modal-footer .btn-confirm {
+      background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+      border: 2px solid #0d6efd;
+      color: white;
+    }
+    #logoutConfirmModal .modal-footer .btn-confirm:hover {
+      background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+      border-color: #0a58ca;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar super-nav navbar-expand-lg py-3">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand fw-bold text-white" href="{% url 'dashboard' %}">
+        <i class="bi bi-shield-lock-fill me-2"></i>Super Admin
+      </a>
+      <form id="logoutForm" method="post" action="{% url 'admin_logout' %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="button" id="logoutBtn" class="btn btn-danger rounded-pill px-4">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="container-fluid px-4 py-5">
+    <section class="hero-card mb-4">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <p class="mb-2 text-uppercase fw-semibold" style="letter-spacing:0.2em;">Transaction Management</p>
+          <h1 class="fw-bold mb-2">All Transactions</h1>
+          <p class="mb-0 lead text-white-50">
+            View and manage all transaction records from this centralized console.
+          </p>
+        </div>
+        <div class="col-lg-4 text-end">
+          <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="d-flex gap-2 flex-wrap mb-4">
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-success rounded-pill px-4"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+      <a href="{% url 'inventory_management' %}" class="btn btn-outline-success rounded-pill px-4"><i class="bi bi-box-seam me-1"></i> Inventory</a>
+      <a href="{% url 'member_management' %}" class="btn btn-outline-success rounded-pill px-4"><i class="bi bi-people-fill me-1"></i> Members</a>
+      <a href="{% url 'transaction_history' %}" class="btn btn-success rounded-pill px-4 active"><i class="bi bi-receipt me-1"></i> Transactions</a>
+    </div>
+
+    <section class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#1f7a3a;">
+              <i class="bi bi-receipt-cutoff"></i>
+            </div>
+            <div>
+              <div class="stat-title">Total Transactions</div>
+              <h3 class="mb-0">{{ total_transactions }}</h3>
+              <small class="text-muted">All time</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#059669;">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div>
+              <div class="stat-title">Completed</div>
+              <h3 class="mb-0">{{ completed_transactions }}</h3>
+              <small class="text-muted">Successful</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#f97316;">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div>
+              <div class="stat-title">Pending</div>
+              <h3 class="mb-0">{{ pending_transactions }}</h3>
+              <small class="text-muted">In progress</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#6366f1;">
+              <i class="bi bi-cash-coin"></i>
+            </div>
+            <div>
+              <div class="stat-title">Total Revenue</div>
+              <h3 class="mb-0">₱{{ total_revenue|floatformat:2 }}</h3>
+              <small class="text-muted">From completed</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="row g-4">
+      <div class="col-12">
+        <div class="table-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Transaction History</h5>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" id="manageAdminBtn" data-bs-toggle="modal" data-bs-target="#manageAdminModal">
+                  <i class="bi bi-gear me-1"></i>Manage Transactions
+                </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Transaction #</th>
+                  <th>Member</th>
+                  <th>Date & Time</th>
+                  <th>Amount</th>
+                  <th>Payment Method</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for transaction in page_obj %}
+                <tr>
+                  <td>
+                    <code class="text-dark">{{ transaction.transaction_number }}</code>
+                  </td>
+                  <td>
+                    {% if transaction.member %}
+                    <div class="fw-semibold">{{ transaction.member.full_name }}</div>
+                    <small class="text-muted">{{ transaction.member.rfid_card_number }}</small>
+                    {% else %}
+                    <span class="text-muted">Guest / No Member</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div>{{ transaction.created_at|date:"M d, Y" }}</div>
+                    <small class="text-muted">{{ transaction.created_at|date:"H:i" }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-success">₱{{ transaction.total_amount|floatformat:2 }}</div>
+                  </td>
+                  <td>
+                    <span class="badge-payment badge-{{ transaction.payment_method }}">
+                      {{ transaction.get_payment_method_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge-status badge-{{ transaction.status }}">
+                      {{ transaction.get_status_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill expand-btn" 
+                            data-transaction-id="{{ transaction.id }}"
+                            id="btn-{{ transaction.id }}">
+                      <i class="bi bi-chevron-down" id="icon-{{ transaction.id }}"></i> Details
+                    </button>
+                  </td>
+                </tr>
+                <tr id="details-{{ transaction.id }}" style="display: none;">
+                  <td colspan="7">
+                    <div class="transaction-details">
+                      <div class="transaction-details-row">
+                        <div>
+                          <div class="detail-label">Vatable Sale</div>
+                          <div class="detail-value">₱{{ transaction.vatable_sale|floatformat:2 }}</div>
+                        </div>
+                        <div>
+                          <div class="detail-label">VAT (12%)</div>
+                          <div class="detail-value">₱{{ transaction.vat_amount|floatformat:2 }}</div>
+                        </div>
+                        <div>
+                          <div class="detail-label">Subtotal</div>
+                          <div class="detail-value">₱{{ transaction.subtotal|floatformat:2 }}</div>
+                        </div>
+                      </div>
+                      {% if transaction.amount_from_balance > 0 or transaction.amount_paid > 0 %}
+                      <div class="transaction-details-row">
+                        {% if transaction.amount_from_balance > 0 %}
+                        <div>
+                          <div class="detail-label">From Balance</div>
+                          <div class="detail-value">₱{{ transaction.amount_from_balance|floatformat:2 }}</div>
+                        </div>
+                        {% endif %}
+                        {% if transaction.amount_paid > 0 %}
+                        <div>
+                          <div class="detail-label">Cash Paid</div>
+                          <div class="detail-value">₱{{ transaction.amount_paid|floatformat:2 }}</div>
+                        </div>
+                        {% endif %}
+                      </div>
+                      {% endif %}
+                      {% if transaction.items.all %}
+                      <div class="items-list">
+                        <div class="detail-label mb-2"><strong>Items Purchased:</strong></div>
+                        {% for item in transaction.items.all %}
+                        <div class="item-row">
+                          <span class="fw-semibold">{{ item.product_name }}</span>
+                          <span class="text-muted">({{ item.product_barcode }})</span>
+                          - <strong>x{{ item.quantity }}</strong> @ ₱{{ item.unit_price|floatformat:2 }}
+                          = <span class="text-success fw-bold">₱{{ item.total_price|floatformat:2 }}</span>
+                        </div>
+                        {% endfor %}
+                      </div>
+                      {% endif %}
+                      {% if transaction.notes %}
+                      <div class="mt-2 pt-2 border-top">
+                        <div class="detail-label"><strong>Notes:</strong></div>
+                        <div class="text-muted">{{ transaction.notes }}</div>
+                      </div>
+                      {% endif %}
+                      <div class="mt-2 pt-2 border-top">
+                        {% if transaction.payment_method == 'cash' and transaction.status == 'completed' %}
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill me-2 open-new-tab-btn" data-url="{% url 'view_cash_receipt' transaction.id %}">
+                          <i class="bi bi-receipt me-1"></i>View Cash Receipt
+                        </button>
+                        {% elif transaction.payment_method == 'debit' and transaction.status == 'completed' %}
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill me-2 open-new-tab-btn" data-url="{% url 'view_debit_credit_receipt' transaction.id %}">
+                          <i class="bi bi-receipt me-1"></i>View Debit Receipt
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill edit-transaction-modal-btn" data-transaction-id="{{ transaction.id }}">
+                          <i class="bi bi-pencil me-1"></i>Edit Transaction
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox me-2"></i>No transactions found.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mt-3 gap-3">
+            <div class="text-muted">
+              Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_transactions }}
+            </div>
+            <nav aria-label="Transaction pagination">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                  {% if page_obj.has_previous %}
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">Previous</a>
+                  {% else %}
+                  <span class="page-link" aria-label="Previous">Previous</span>
+                  {% endif %}
+                </li>
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                  <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                  {% if page_obj.has_next %}
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">Next</a>
+                  {% else %}
+                  <span class="page-link" aria-label="Next">Next</span>
+                  {% endif %}
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Edit Transaction Modal (for individual Edit in Admin buttons) -->
+  <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editTransactionModalLabel">
+            <i class="bi bi-pencil me-2"></i>Edit Transaction
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editTransactionSingleForm">
+            {% csrf_token %}
+            <input type="hidden" id="editTransactionSingleId" name="transaction_id">
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="editTransactionSingleNumber" class="form-label">Transaction Number</label>
+                <input type="text" class="form-control" id="editTransactionSingleNumber" readonly>
+              </div>
+              <div class="col-md-6">
+                <label for="editTransactionSingleStatus" class="form-label">Status</label>
+                <select class="form-select" id="editTransactionSingleStatus" name="status" required>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
+                <label for="editTransactionSinglePaymentMethod" class="form-label">Payment Method</label>
+                <select class="form-select" id="editTransactionSinglePaymentMethod" name="payment_method" required>
+                  <option value="cash">Cash</option>
+                  <option value="debit">Debit (Member Account)</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="editTransactionSingleTotalAmount" class="form-label">Total Amount</label>
+                <input type="number" class="form-control" id="editTransactionSingleTotalAmount" name="total_amount" step="0.01" readonly>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
+                <label for="editTransactionSingleAmountPaid" class="form-label">Amount Paid</label>
+                <input type="number" class="form-control" id="editTransactionSingleAmountPaid" name="amount_paid" step="0.01">
+              </div>
+              <div class="col-md-6">
+                <label for="editTransactionSingleAmountFromBalance" class="form-label">Amount From Balance</label>
+                <input type="number" class="form-control" id="editTransactionSingleAmountFromBalance" name="amount_from_balance" step="0.01">
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label for="editTransactionSingleNotes" class="form-label">Notes</label>
+              <textarea class="form-control" id="editTransactionSingleNotes" name="notes" rows="3"></textarea>
+            </div>
+
+            <!-- Transaction Items Display -->
+            <div class="mt-4">
+              <label class="form-label fw-bold">Transaction Items</label>
+              <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-bordered">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Product</th>
+                      <th>Barcode</th>
+                      <th>Quantity</th>
+                      <th>Unit Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="editTransactionSingleItems">
+                    <!-- Items will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Member Info -->
+            <div class="mt-3" id="editTransactionSingleMemberInfo" style="display: none;">
+              <label class="form-label fw-bold">Member Information</label>
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <small class="text-muted">Member Name:</small>
+                      <div id="editTransactionSingleMemberName" class="fw-semibold"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <small class="text-muted">RFID Card:</small>
+                      <div id="editTransactionSingleMemberRfid" class="fw-semibold"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="editTransactionSingleMessage" class="alert mt-3" style="display: none;"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" form="editTransactionSingleForm" class="btn btn-success rounded-pill">
+            <i class="bi bi-check-circle me-1"></i>Update Transaction
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Admin Modal -->
+  <div class="modal fade" id="manageAdminModal" tabindex="-1" aria-labelledby="manageAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="manageAdminModalLabel">
+            <i class="bi bi-gear me-2"></i>Manage Transactions
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Search Form -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h6 class="card-title mb-3">Search & Filter Transactions</h6>
+              <form id="transactionSearchForm">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label for="searchTransactionNumber" class="form-label">Transaction Number</label>
+                    <input type="text" class="form-control" id="searchTransactionNumber" placeholder="e.g., TXN-123">
+                  </div>
+                  <div class="col-md-4">
+                    <label for="searchStatus" class="form-label">Status</label>
+                    <select class="form-select" id="searchStatus">
+                      <option value="">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="searchPaymentMethod" class="form-label">Payment Method</label>
+                    <select class="form-select" id="searchPaymentMethod">
+                      <option value="">All Methods</option>
+                      <option value="cash">Cash</option>
+                      <option value="debit">Debit (Member Account)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row g-3 mt-2">
+                  <div class="col-md-6">
+                    <label for="searchDateFrom" class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="searchDateFrom">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="searchDateTo" class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="searchDateTo">
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <button type="submit" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-search me-1"></i>Search
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary rounded-pill ms-2" id="resetSearchBtn">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Search Results -->
+          <div id="searchResults" style="display: none;">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title mb-3">Search Results</h6>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                  <table class="table table-sm table-hover">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th>Transaction #</th>
+                        <th>Member</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="searchResultsBody">
+                      <!-- Results will be populated here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Transaction Form -->
+          <div id="editTransactionForm" style="display: none;">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-title mb-3">Edit Transaction</h6>
+                <form id="updateTransactionForm">
+                  {% csrf_token %}
+                  <input type="hidden" id="editTransactionId" name="transaction_id">
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="editTransactionNumber" class="form-label">Transaction Number</label>
+                      <input type="text" class="form-control" id="editTransactionNumber" readonly>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editStatus" class="form-label">Status</label>
+                      <select class="form-select" id="editStatus" name="status" required>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                      <label for="editPaymentMethod" class="form-label">Payment Method</label>
+                      <select class="form-select" id="editPaymentMethod" name="payment_method" required>
+                        <option value="cash">Cash</option>
+                        <option value="debit">Debit (Member Account)</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editTotalAmount" class="form-label">Total Amount</label>
+                      <input type="number" class="form-control" id="editTotalAmount" name="total_amount" step="0.01" readonly>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                      <label for="editAmountPaid" class="form-label">Amount Paid</label>
+                      <input type="number" class="form-control" id="editAmountPaid" name="amount_paid" step="0.01">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editAmountFromBalance" class="form-label">Amount From Balance</label>
+                      <input type="number" class="form-control" id="editAmountFromBalance" name="amount_from_balance" step="0.01">
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <label for="editNotes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="editNotes" name="notes" rows="3"></textarea>
+                  </div>
+
+                  <div class="mt-4">
+                    <button type="submit" class="btn btn-success rounded-pill">
+                      <i class="bi bi-check-circle me-1"></i>Update Transaction
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill ms-2" id="cancelEditBtn">
+                      <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Area -->
+          <div id="manageAdminMessage" class="alert" style="display: none;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // CSRF Token helper
+    function getCsrfToken() {
+      const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+      if (token) return token;
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [key, value] = cookie.trim().split('=');
+        if (key === 'csrftoken') return value;
+      }
+      return '';
+    }
+
+    // Logout confirmation handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      const logoutForm = document.getElementById('logoutForm');
+      
+      if (logoutBtn && logoutForm) {
+        logoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          showLogoutConfirmModal();
+        });
+      }
+
+      function showLogoutConfirmModal() {
+        const modal = document.getElementById('logoutConfirmModal');
+        if (!modal) {
+          console.error('Logout confirmation modal not found');
+          // Fallback to browser confirm
+          if (confirm('Are you sure you want to logout?')) {
+            logoutForm.submit();
+          }
+          return;
+        }
+        
+        // Check if Bootstrap is available
+        if (typeof bootstrap === 'undefined') {
+          console.error('Bootstrap is not loaded');
+          // Fallback to browser confirm
+          if (confirm('Are you sure you want to logout?')) {
+            logoutForm.submit();
+          }
+          return;
+        }
+        
+        // Get or create modal instance
+        let bsModal = bootstrap.Modal.getInstance(modal);
+        if (!bsModal) {
+          bsModal = new bootstrap.Modal(modal, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+          });
+        }
+        
+        // Remove existing event listeners to prevent duplicates
+        const confirmBtn = modal.querySelector('.btn-confirm');
+        const cancelBtn = modal.querySelector('.btn-cancel');
+        
+        // Clone and replace buttons to remove old listeners
+        if (confirmBtn) {
+          const newConfirmBtn = confirmBtn.cloneNode(true);
+          confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+          newConfirmBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            bsModal.hide();
+            setTimeout(function() {
+              logoutForm.submit();
+            }, 300);
+          });
+        }
+        
+        if (cancelBtn) {
+          const newCancelBtn = cancelBtn.cloneNode(true);
+          cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+          newCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            bsModal.hide();
+          });
+        }
+        
+        // Show modal
+        try {
+          bsModal.show();
+        } catch (error) {
+          console.error('Error showing modal:', error);
+          // Fallback to browser confirm
+          if (confirm('Are you sure you want to logout?')) {
+            logoutForm.submit();
+          }
+        }
+      }
+
+      // Handle Manage Admin Modal - Transaction Search Form
+      const transactionSearchForm = document.getElementById('transactionSearchForm');
+      const resetSearchBtn = document.getElementById('resetSearchBtn');
+      const searchResults = document.getElementById('searchResults');
+      const searchResultsBody = document.getElementById('searchResultsBody');
+      const editTransactionForm = document.getElementById('editTransactionForm');
+      const updateTransactionForm = document.getElementById('updateTransactionForm');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+      const manageAdminMessage = document.getElementById('manageAdminMessage');
+
+      // Search form submission
+      if (transactionSearchForm) {
+        transactionSearchForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          searchTransactions();
+        });
+      }
+
+      // Reset search
+      if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', function() {
+          transactionSearchForm.reset();
+          searchResults.style.display = 'none';
+          editTransactionForm.style.display = 'none';
+          hideMessage();
+        });
+      }
+
+      // Cancel edit
+      if (cancelEditBtn) {
+        cancelEditBtn.addEventListener('click', function() {
+          editTransactionForm.style.display = 'none';
+          updateTransactionForm.reset();
+        });
+      }
+
+      // Update transaction form submission
+      if (updateTransactionForm) {
+        updateTransactionForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          updateTransaction();
+        });
+      }
+
+      // Search transactions function
+      function searchTransactions() {
+        const transactionNumber = document.getElementById('searchTransactionNumber').value.trim();
+        const status = document.getElementById('searchStatus').value;
+        const paymentMethod = document.getElementById('searchPaymentMethod').value;
+        const dateFrom = document.getElementById('searchDateFrom').value;
+        const dateTo = document.getElementById('searchDateTo').value;
+
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (transactionNumber) params.append('transaction_number', transactionNumber);
+        if (status) params.append('status', status);
+        if (paymentMethod) params.append('payment_method', paymentMethod);
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+
+        // Show loading
+        searchResultsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm me-2"></div>Searching...</td></tr>';
+        searchResults.style.display = 'block';
+        editTransactionForm.style.display = 'none';
+        hideMessage();
+
+        // Fetch transactions via API
+        fetch(`/api/search-transactions/?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken()
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (!result.success) {
+            showMessage(result.error || 'Error searching transactions.', 'danger');
+            searchResultsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading results.</td></tr>';
+            return;
+          }
+
+          const transactions = result.transactions || [];
+
+          if (transactions.length === 0) {
+            searchResultsBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No transactions found.</td></tr>';
+            return;
+          }
+
+          // Build results table
+          let resultsHtml = '';
+          transactions.forEach(txn => {
+            const statusClass = txn.status === 'completed' ? 'badge-completed' : 
+                               txn.status === 'pending' ? 'badge-pending' : 'badge-cancelled';
+            resultsHtml += `
+              <tr>
+                <td><code>${txn.transaction_number}</code></td>
+                <td>${txn.member_name}</td>
+                <td>${txn.date}<br><small class="text-muted">${txn.time}</small></td>
+                <td>₱${parseFloat(txn.amount).toFixed(2)}</td>
+                <td><span class="badge-status ${statusClass}">${txn.status_display}</span></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary rounded-pill edit-transaction-btn" 
+                          data-transaction-id="${txn.id}">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                  </button>
+                </td>
+              </tr>
+            `;
+          });
+
+          searchResultsBody.innerHTML = resultsHtml;
+
+          // Attach edit button handlers
+          document.querySelectorAll('.edit-transaction-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const transactionId = this.getAttribute('data-transaction-id');
+              loadTransactionForEdit(transactionId);
+            });
+          });
+        })
+        .catch(error => {
+          console.error('Search error:', error);
+          showMessage('Error searching transactions. Please try again.', 'danger');
+          searchResultsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading results.</td></tr>';
+        });
+      }
+
+      // Load transaction for editing
+      function loadTransactionForEdit(transactionId) {
+        if (!transactionId) {
+          showMessage('Invalid transaction ID.', 'danger');
+          return;
+        }
+
+        // Show loading - disable form fields
+        editTransactionForm.style.display = 'block';
+        searchResults.style.display = 'none';
+        const formFields = updateTransactionForm.querySelectorAll('input, select, textarea');
+        formFields.forEach(field => {
+          field.disabled = true;
+        });
+        const submitBtn = updateTransactionForm.querySelector('button[type="submit"]');
+        const originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
+
+        // Fetch transaction details via API
+        fetch(`/api/get-transaction/${transactionId}/`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken()
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(result => {
+          // Re-enable form fields
+          formFields.forEach(field => {
+            field.disabled = false;
+          });
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+
+          if (!result.success) {
+            showMessage(result.error || 'Transaction not found.', 'danger');
+            editTransactionForm.style.display = 'none';
+            return;
+          }
+
+          const txn = result.transaction;
+
+          // Populate form
+          document.getElementById('editTransactionId').value = txn.id;
+          document.getElementById('editTransactionNumber').value = txn.transaction_number;
+          document.getElementById('editStatus').value = txn.status;
+          document.getElementById('editPaymentMethod').value = txn.payment_method;
+          document.getElementById('editTotalAmount').value = txn.total_amount;
+          document.getElementById('editAmountPaid').value = txn.amount_paid || '0';
+          document.getElementById('editAmountFromBalance').value = txn.amount_from_balance || '0';
+          document.getElementById('editNotes').value = txn.notes || '';
+
+          hideMessage();
+        })
+        .catch(error => {
+          console.error('Load error:', error);
+          showMessage('Error loading transaction details.', 'danger');
+          formFields.forEach(field => {
+            field.disabled = false;
+          });
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+          editTransactionForm.style.display = 'none';
+        });
+      }
+
+      // Update transaction
+      function updateTransaction() {
+        const formData = new FormData(updateTransactionForm);
+        const transactionId = formData.get('transaction_id');
+
+        if (!transactionId) {
+          showMessage('Transaction ID is required.', 'danger');
+          return;
+        }
+
+        // Build JSON payload
+        const data = {
+          transaction_id: transactionId,
+          status: formData.get('status'),
+          payment_method: formData.get('payment_method'),
+          amount_paid: formData.get('amount_paid') || '0',
+          amount_from_balance: formData.get('amount_from_balance') || '0',
+          notes: formData.get('notes') || ''
+        };
+
+        // Show loading
+        const submitBtn = updateTransactionForm.querySelector('button[type="submit"]');
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
+
+        // Submit update (Note: You'll need to create an API endpoint for this)
+        fetch('/api/update-transaction/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+          },
+          body: JSON.stringify(data),
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            showMessage(result.message || 'Transaction updated successfully!', 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            showMessage(result.error || 'Failed to update transaction.', 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHtml;
+          }
+        })
+        .catch(error => {
+          console.error('Update error:', error);
+          showMessage('Error updating transaction. Please try again.', 'danger');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        });
+      }
+
+      // Show message
+      function showMessage(message, type) {
+        manageAdminMessage.className = `alert alert-${type}`;
+        manageAdminMessage.textContent = message;
+        manageAdminMessage.style.display = 'block';
+        setTimeout(() => {
+          hideMessage();
+        }, 5000);
+      }
+
+      // Hide message
+      function hideMessage() {
+        manageAdminMessage.style.display = 'none';
+      }
+
+      // Load transaction for single edit modal (Edit in Admin button)
+      function loadTransactionForSingleEdit(transactionId) {
+        console.log('Loading transaction:', transactionId);
+        
+        if (!transactionId) {
+          showSingleEditMessage('Invalid transaction ID.', 'danger');
+          return;
+        }
+
+        const form = document.getElementById('editTransactionSingleForm');
+        if (!form) {
+          console.error('Form not found');
+          return;
+        }
+        
+        const formFields = form.querySelectorAll('input, select, textarea');
+        const submitBtn = document.querySelector('#editTransactionModal button[type="submit"]');
+        
+        // Disable form and show loading
+        formFields.forEach(field => {
+          field.disabled = true;
+        });
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          const originalBtnHtml = submitBtn.innerHTML;
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
+        }
+        hideSingleEditMessage();
+
+        // Fetch transaction details via API
+        fetch(`/api/get-transaction/${transactionId}/`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCsrfToken()
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          console.log('Response status:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(result => {
+          console.log('API result:', result);
+          
+          // Re-enable form fields
+          formFields.forEach(field => {
+            field.disabled = false;
+          });
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Update Transaction';
+          }
+
+          if (!result.success) {
+            console.error('API error:', result.error);
+            showSingleEditMessage(result.error || 'Transaction not found.', 'danger');
+            return;
+          }
+
+          const txn = result.transaction;
+          console.log('Transaction data:', txn);
+
+          // Populate form fields
+          const idField = document.getElementById('editTransactionSingleId');
+          const numberField = document.getElementById('editTransactionSingleNumber');
+          const statusField = document.getElementById('editTransactionSingleStatus');
+          const paymentMethodField = document.getElementById('editTransactionSinglePaymentMethod');
+          const totalAmountField = document.getElementById('editTransactionSingleTotalAmount');
+          const amountPaidField = document.getElementById('editTransactionSingleAmountPaid');
+          const amountFromBalanceField = document.getElementById('editTransactionSingleAmountFromBalance');
+          const notesField = document.getElementById('editTransactionSingleNotes');
+
+          if (idField) idField.value = txn.id || '';
+          if (numberField) numberField.value = txn.transaction_number || '';
+          if (statusField) statusField.value = txn.status || 'pending';
+          if (paymentMethodField) paymentMethodField.value = txn.payment_method || 'cash';
+          if (totalAmountField) totalAmountField.value = txn.total_amount || '0';
+          if (amountPaidField) amountPaidField.value = txn.amount_paid || '0';
+          if (amountFromBalanceField) amountFromBalanceField.value = txn.amount_from_balance || '0';
+          if (notesField) notesField.value = txn.notes || '';
+
+          console.log('Form populated:', {
+            id: idField?.value,
+            number: numberField?.value,
+            status: statusField?.value,
+            payment_method: paymentMethodField?.value
+          });
+
+          // Populate transaction items
+          const itemsTbody = document.getElementById('editTransactionSingleItems');
+          if (itemsTbody) {
+            if (txn.items && txn.items.length > 0) {
+              let itemsHtml = '';
+              txn.items.forEach(item => {
+                itemsHtml += `
+                  <tr>
+                    <td>${item.product_name || 'N/A'}</td>
+                    <td><code>${item.product_barcode || 'N/A'}</code></td>
+                    <td>${item.quantity || 0}</td>
+                    <td>₱${parseFloat(item.unit_price || 0).toFixed(2)}</td>
+                    <td>₱${parseFloat(item.total_price || 0).toFixed(2)}</td>
+                  </tr>
+                `;
+              });
+              itemsTbody.innerHTML = itemsHtml;
+            } else {
+              itemsTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No items found.</td></tr>';
+            }
+          }
+
+          // Populate member info if available
+          const memberInfo = document.getElementById('editTransactionSingleMemberInfo');
+          if (memberInfo) {
+            if (txn.member_id && txn.member_name) {
+              const memberNameField = document.getElementById('editTransactionSingleMemberName');
+              const memberRfidField = document.getElementById('editTransactionSingleMemberRfid');
+              if (memberNameField) memberNameField.textContent = txn.member_name;
+              if (memberRfidField) memberRfidField.textContent = txn.member_rfid || 'N/A';
+              memberInfo.style.display = 'block';
+            } else {
+              memberInfo.style.display = 'none';
+            }
+          }
+
+          hideSingleEditMessage();
+        })
+        .catch(error => {
+          console.error('Load error:', error);
+          showSingleEditMessage('Error loading transaction details: ' + error.message, 'danger');
+          formFields.forEach(field => {
+            field.disabled = false;
+          });
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Update Transaction';
+          }
+        });
+      }
+
+      // Handle single edit form submission
+      const editTransactionSingleForm = document.getElementById('editTransactionSingleForm');
+      if (editTransactionSingleForm) {
+        editTransactionSingleForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          updateSingleTransaction();
+        });
+      }
+
+      // Update single transaction
+      function updateSingleTransaction() {
+        const form = document.getElementById('editTransactionSingleForm');
+        const formData = new FormData(form);
+        const transactionId = formData.get('transaction_id');
+
+        if (!transactionId) {
+          showSingleEditMessage('Transaction ID is required.', 'danger');
+          return;
+        }
+
+        // Build JSON payload
+        const data = {
+          transaction_id: transactionId,
+          status: formData.get('status'),
+          payment_method: formData.get('payment_method'),
+          amount_paid: formData.get('amount_paid') || '0',
+          amount_from_balance: formData.get('amount_from_balance') || '0',
+          notes: formData.get('notes') || ''
+        };
+
+        // Show loading
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
+
+        // Submit update
+        fetch('/api/update-transaction/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+          },
+          body: JSON.stringify(data),
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            showSingleEditMessage(result.message || 'Transaction updated successfully!', 'success');
+            setTimeout(() => {
+              // Close modal and reload page
+              const modal = bootstrap.Modal.getInstance(document.getElementById('editTransactionModal'));
+              if (modal) {
+                modal.hide();
+              }
+              window.location.reload();
+            }, 1500);
+          } else {
+            showSingleEditMessage(result.error || 'Failed to update transaction.', 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+          }
+        })
+        .catch(error => {
+          console.error('Update error:', error);
+          showSingleEditMessage('Error updating transaction. Please try again.', 'danger');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        });
+      }
+
+      // Show message in single edit modal
+      function showSingleEditMessage(message, type) {
+        const messageDiv = document.getElementById('editTransactionSingleMessage');
+        messageDiv.className = `alert alert-${type} mt-3`;
+        messageDiv.textContent = message;
+        messageDiv.style.display = 'block';
+        setTimeout(() => {
+          hideSingleEditMessage();
+        }, 5000);
+      }
+
+      // Hide message in single edit modal
+      function hideSingleEditMessage() {
+        const messageDiv = document.getElementById('editTransactionSingleMessage');
+        messageDiv.style.display = 'none';
+      }
+
+      // Handle Edit in Admin buttons - open modal and load data
+      document.querySelectorAll('.edit-transaction-modal-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const transactionId = this.getAttribute('data-transaction-id');
+          console.log('Button clicked, transaction ID:', transactionId);
+          
+          if (transactionId) {
+            // Manually show the modal
+            const modalElement = document.getElementById('editTransactionModal');
+            if (modalElement) {
+              const modal = new bootstrap.Modal(modalElement);
+              modal.show();
+              
+              // Load data when modal is fully shown
+              modalElement.addEventListener('shown.bs.modal', function loadData() {
+                loadTransactionForSingleEdit(transactionId);
+                // Remove listener after first use
+                modalElement.removeEventListener('shown.bs.modal', loadData);
+              }, { once: true });
+            }
+          }
+        });
+      });
+
+      // Reset single edit modal when closed
+      const editTransactionModal = document.getElementById('editTransactionModal');
+      if (editTransactionModal) {
+        editTransactionModal.addEventListener('hidden.bs.modal', function() {
+          const form = document.getElementById('editTransactionSingleForm');
+          if (form) {
+            form.reset();
+            const itemsTbody = document.getElementById('editTransactionSingleItems');
+            if (itemsTbody) itemsTbody.innerHTML = '';
+            const memberInfo = document.getElementById('editTransactionSingleMemberInfo');
+            if (memberInfo) memberInfo.style.display = 'none';
+            hideSingleEditMessage();
+          }
+        });
+      }
+
+      // Handle all admin page buttons - open in new tab (prevents navigation on current page)
+      document.querySelectorAll('.open-admin-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        });
+      });
+
+      // Handle all new tab buttons (receipts, etc.) - open in new tab (prevents navigation on current page)
+      document.querySelectorAll('.open-new-tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        });
+      });
+
+      // Handle expand/collapse details buttons
+      document.querySelectorAll('.expand-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const transactionId = this.getAttribute('data-transaction-id');
+          toggleDetails(transactionId);
+        });
+      });
+    });
+
+    // Toggle transaction details
+    function toggleDetails(transactionId) {
+      const detailsRow = document.getElementById('details-' + transactionId);
+      const icon = document.getElementById('icon-' + transactionId);
+      const btn = document.getElementById('btn-' + transactionId);
+      
+      if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row';
+        icon.className = 'bi bi-chevron-up';
+        btn.innerHTML = '<i class="bi bi-chevron-up" id="icon-' + transactionId + '"></i> Hide';
+      } else {
+        detailsRow.style.display = 'none';
+        icon.className = 'bi bi-chevron-down';
+        btn.innerHTML = '<i class="bi bi-chevron-down" id="icon-' + transactionId + '"></i> Details';
+      }
+    }
+  </script>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="logoutConfirmModalLabel">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Confirm Logout
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
+          <p>Are you sure you want to logout?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-confirm">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

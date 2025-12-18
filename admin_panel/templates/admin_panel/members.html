@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Management | Genglo Printing Services</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --dark: #0f172a;
+      --brand: #1f7a3a;
+      --accent: #0b5f3a;
+      --muted: #94a3b8;
+      --panel: #ffffff;
+      --gradient: linear-gradient(135deg, #1f7a3a 0%, #0b5f3a 40%, #0d9488 100%);
+    }
+
+    body {
+      background: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    .super-nav {
+      background: var(--dark);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.4);
+    }
+
+    .nav-pill {
+      border-radius: 999px;
+      padding: 8px 18px;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .nav-pill.active, .nav-pill:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    .hero-card {
+      background: var(--gradient);
+      color: #fff;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 25px 55px rgba(15,23,42,0.35);
+    }
+
+    .stat-card {
+      border: none;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 18px 36px rgba(15,23,42,0.08);
+      background: var(--panel);
+      height: 100%;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #fff;
+    }
+
+    .stat-title {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .table-card {
+      border-radius: 20px;
+      padding: 20px;
+      background: var(--panel);
+      box-shadow: 0 15px 30px rgba(15,23,42,0.07);
+    }
+
+    .table-card table {
+      font-size: 0.9rem;
+    }
+
+    .table-card thead {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .badge-role {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .role-admin {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-cashier {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .role-staff {
+      background: #e9d5ff;
+      color: #6b21a8;
+    }
+
+    .role-member {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .balance-positive {
+      color: #059669;
+      font-weight: 600;
+    }
+
+    .balance-negative {
+      color: #dc2626;
+      font-weight: 600;
+    }
+
+    /* Custom Logout Confirmation Modal */
+    #logoutConfirmModal {
+      z-index: 9999 !important;
+    }
+    #logoutConfirmModal .modal-dialog {
+      max-width: 480px;
+      margin: 10vh auto;
+      display: flex;
+      align-items: center;
+      min-height: calc(100vh - 20vh);
+    }
+    #logoutConfirmModal .modal-content {
+      border-radius: 18px;
+      border: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    #logoutConfirmModal .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9998 !important;
+    }
+    #logoutConfirmModal .modal-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 2px solid #dee2e6;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #logoutConfirmModal .modal-header .modal-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+    }
+    #logoutConfirmModal .modal-header .modal-title i {
+      color: #ff9800;
+      font-size: 1.8rem;
+    }
+    #logoutConfirmModal .modal-body {
+      padding: 32px;
+      text-align: center;
+    }
+    #logoutConfirmModal .modal-body .warning-icon {
+      font-size: 4rem;
+      color: #ff9800;
+      margin-bottom: 20px;
+      display: block;
+    }
+    #logoutConfirmModal .modal-body p {
+      font-size: 1.1rem;
+      color: #495057;
+      line-height: 1.6;
+      margin: 0;
+      font-weight: 400;
+    }
+    #logoutConfirmModal .modal-footer {
+      border-top: 2px solid #e9ecef;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      background: #f8f9fa;
+    }
+    #logoutConfirmModal .modal-footer .btn {
+      min-width: 120px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    #logoutConfirmModal .modal-footer .btn-cancel {
+      background: #6c757d;
+      border: 2px solid #6c757d;
+      color: white;
+    }
+    #logoutConfirmModal .modal-footer .btn-cancel:hover {
+      background: #5a6268;
+      border-color: #5a6268;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+    #logoutConfirmModal .modal-footer .btn-confirm {
+      background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+      border: 2px solid #0d6efd;
+      color: white;
+    }
+    #logoutConfirmModal .modal-footer .btn-confirm:hover {
+      background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+      border-color: #0a58ca;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+    }
+
+  </style>
+</head>
+<body>
+  <nav class="navbar super-nav navbar-expand-lg py-3">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand fw-bold text-white" href="{% url 'dashboard' %}">
+        <i class="bi bi-shield-lock-fill me-2"></i>Super Admin
+      </a>
+      <form id="logoutForm" method="post" action="{% url 'admin_logout' %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="button" id="logoutBtn" class="btn btn-danger rounded-pill px-4">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="container-fluid px-4 py-5">
+    <section class="hero-card mb-4">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <p class="mb-2 text-uppercase fw-semibold" style="letter-spacing:0.2em;">Member Management</p>
+          <h1 class="fw-bold mb-2">Cooperative Members</h1>
+          <p class="mb-0 lead text-white-50">
+            Manage member accounts, balances, credit standing, and member types from this centralized console.
+          </p>
+        </div>
+        <div class="col-lg-4 text-end">
+          <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="d-flex gap-2 flex-wrap mb-4">
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-success rounded-pill px-4"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+      <a href="{% url 'inventory_management' %}" class="btn btn-outline-success rounded-pill px-4"><i class="bi bi-box-seam me-1"></i> Inventory</a>
+      <a href="{% url 'member_management' %}" class="btn btn-success rounded-pill px-4 active"><i class="bi bi-people-fill me-1"></i> Members</a>
+      <a href="{% url 'transaction_history' %}" class="btn btn-outline-success rounded-pill px-4"><i class="bi bi-receipt me-1"></i> Transactions</a>
+      <button type="button" class="btn btn-outline-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#refillBalanceModal">
+        <i class="bi bi-wallet2 me-1"></i> Refill Card Balance
+      </button>
+    </div>
+
+    <section class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#1f7a3a;">
+              <i class="bi bi-people"></i>
+            </div>
+            <div>
+              <div class="stat-title">Total Members</div>
+              <h3 class="mb-0">{{ total_members }}</h3>
+              <small class="text-muted">All members</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#059669;">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div>
+              <div class="stat-title">Active Members</div>
+              <h3 class="mb-0">{{ active_members }}</h3>
+              <small class="text-muted">Currently active</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#f97316;">
+              <i class="bi bi-credit-card-2-front"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#6366f1;">
+              <i class="bi bi-wallet2"></i>
+            </div>
+            <div>
+              <div class="stat-title">Total Balances</div>
+              <h3 class="mb-0">₱{{ total_balances|floatformat:2 }}</h3>
+              <small class="text-muted">Combined balances</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="row g-4">
+      <div class="col-12">
+        <div class="table-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">All Members</h5>
+            <div class="d-flex gap-2">
+              <div class="dropdown">
+                <button class="btn btn-outline-primary btn-sm rounded-pill dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-list-ul me-1"></i>Actions
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionsDropdown">
+                  <li>
+                    <a class="dropdown-item" href="#" id="backupDataBtn" data-bs-toggle="modal" data-bs-target="#backupDataModal" title="Download backup of all member data">
+                      <i class="bi bi-download me-2 text-primary"></i>Backup Data
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" id="restoreDataBtn" data-bs-toggle="modal" data-bs-target="#restoreDataModal" title="Restore deleted members from backup date">
+                      <i class="bi bi-arrow-counterclockwise me-2 text-warning"></i>Restore Members
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="#" id="addMemberBtn">
+                      <i class="bi bi-plus-circle me-2 text-success"></i>Add Member
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" id="manageMemberTypesBtn">
+                      <i class="bi bi-tags me-2 text-secondary"></i>Manage Member Types
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <form method="GET" action="{% url 'member_management' %}" id="memberSearchForm">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control border-start-0" 
+                  id="memberSearchInput" 
+                  name="search" 
+                  placeholder="Search by name, RFID, email, phone, member type, or role..." 
+                  value="{{ search_query }}"
+                  autocomplete="off"
+                >
+                {% if search_query %}
+                <a href="{% url 'member_management' %}" class="btn btn-outline-secondary" type="button" title="Clear search">
+                  <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+                <button class="btn btn-success" type="submit">
+                  <i class="bi bi-search me-1"></i>Search
+                </button>
+              </div>
+              {% if search_query %}
+              <small class="text-muted mt-2 d-block">
+                <i class="bi bi-info-circle me-1"></i>
+                Showing results for "<strong>{{ search_query }}</strong>". 
+                <a href="{% url 'member_management' %}" class="text-decoration-none">Clear search</a>
+              </small>
+              {% endif %}
+            </form>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>RFID Card</th>
+                  <th>Member Type</th>
+                  <th>Role</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for member in members %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ member.full_name }}</div>
+                    {% if member.email %}
+                    <small class="text-muted">{{ member.email }}</small>
+                    {% endif %}
+                    {% if member.phone %}
+                    <small class="text-muted d-block">{{ member.phone }}</small>
+                    {% endif %}
+                  </td>
+                  <td><code>{{ member.rfid_card_number }}</code></td>
+                  <td>
+                    {% if member.member_type %}
+                    <span class="badge bg-light text-dark">{{ member.member_type.name }}</span>
+                    {% else %}
+                    <span class="text-muted">No type</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge-role role-{{ member.role }}">
+                      {{ member.get_role_display }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="balance-positive">₱{{ member.balance|floatformat:2 }}</span>
+                  </td>
+                  <td>
+                    {% if member.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                    {% if member.user %}
+                    <span class="badge bg-info ms-1">Has Account</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary rounded-pill edit-member-btn"
+                        title="Edit Member"
+                        data-id="{{ member.id }}"
+                        data-first-name="{{ member.first_name|escapejs }}"
+                        data-last-name="{{ member.last_name|escapejs }}"
+                        data-email="{{ member.email|default_if_none:''|escapejs }}"
+                        data-phone="{{ member.phone|escapejs }}"
+                        data-rfid="{{ member.rfid_card_number|escapejs }}"
+                        data-member-type="{% if member.member_type %}{{ member.member_type.id }}{% endif %}"
+                        data-role="{{ member.role }}"
+                        data-active="{{ member.is_active }}"
+                        data-user-id="{% if member.user %}{{ member.user.id }}{% endif %}"
+                        data-username="{% if member.user %}{{ member.user.username|escapejs }}{% endif %}"
+                        data-has-user="{% if member.user %}true{% else %}false{% endif %}"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-sm btn-outline-success rounded-pill quick-refill-btn" 
+                        data-member-id="{{ member.id }}"
+                        data-member-name="{{ member.full_name|escapejs }}"
+                        data-member-rfid="{{ member.rfid_card_number|escapejs }}"
+                        data-member-balance="{{ member.balance }}"
+                        title="Quick Refill"
+                      >
+                        <i class="bi bi-wallet2"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox me-2"></i>No members found. 
+                    <a href="/admin/members/member/add/">Add your first member</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Member Form Modal -->
+  <div class="modal fade" id="memberFormModal" tabindex="-1" aria-labelledby="memberFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="memberFormModalLabel">Add Member</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="memberFormAlert" style="display:none;"></div>
+          <form id="memberForm">
+            {% csrf_token %}
+            <input type="hidden" id="memberIdInput" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-control" id="memberFirstName" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="memberLastName" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="memberEmail" placeholder="optional">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label>
+                <input type="text" class="form-control" id="memberPhone" placeholder="optional">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">RFID Card Number</label>
+                <input type="text" class="form-control" id="memberRfid" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Member Type</label>
+                <select class="form-select" id="memberTypeSelect" {% if is_staff %}disabled{% endif %}>
+                  <option value="">No type</option>
+                  {% for mt in member_types %}
+                  <option value="{{ mt.id }}">{{ mt.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Role</label>
+                <select class="form-select" id="memberRole">
+                  <option value="member">Member</option>
+                  {% if not is_staff %}
+                  <option value="staff">Staff</option>
+                  <option value="cashier">Cashier</option>
+                  <option value="admin">Admin</option>
+                  {% endif %}
+                </select>
+              </div>
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check mt-4">
+                  <input class="form-check-input" type="checkbox" id="memberIsActive" checked>
+                  <label class="form-check-label" for="memberIsActive">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+            <hr class="my-3">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="createUserAccount" onchange="toggleUserAccountFields()">
+                  <label class="form-check-label fw-semibold" for="createUserAccount">
+                    <i class="bi bi-person-plus me-1"></i>Create User Account
+                  </label>
+                  <small class="text-muted d-block ms-4 mt-1">Allow this member to log in to the system</small>
+                </div>
+              </div>
+              <div class="col-md-6" id="userAccountFields" style="display: none;">
+                <label class="form-label">Username <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="memberUsername" placeholder="Enter username">
+                <small class="text-muted">Required if creating user account</small>
+              </div>
+              <div class="col-md-6" id="userPasswordFields" style="display: none;">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="memberPassword" placeholder="Enter password">
+                <small class="text-muted">Required if creating user account</small>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveMemberBtn">
+            <i class="bi bi-check-circle me-1"></i>Save Member
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member Type Modal -->
+  <div class="modal fade" id="memberTypeModal" tabindex="-1" aria-labelledby="memberTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-secondary text-white">
+          <h5 class="modal-title" id="memberTypeModalLabel">Add Member Type</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="memberTypeAlert" style="display:none;"></div>
+          <form id="memberTypeForm">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" id="memberTypeName" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="memberTypeDescription" rows="2" placeholder="optional"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="memberTypeIsActive" checked>
+                  <label class="form-check-label" for="memberTypeIsActive">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveMemberTypeBtn">
+            <i class="bi bi-plus-circle me-1"></i>Add Type
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Balance Refill Modal -->
+  <div class="modal fade" id="refillBalanceModal" tabindex="-1" aria-labelledby="refillBalanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="refillBalanceModalLabel">
+            <i class="bi bi-wallet2 me-2"></i>Refill Card Balance
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="refillBalanceForm">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="memberSearch" class="form-label">Search Member</label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="memberSearch" placeholder="Search by RFID, name, or email..." autocomplete="off">
+                <button class="btn btn-outline-secondary" type="button" id="searchMemberBtn">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+              <div id="memberSearchResults" class="mt-2" style="display: none;">
+                <div class="list-group" id="memberResultsList"></div>
+              </div>
+              <small class="text-muted">Type at least 2 characters to search</small>
+            </div>
+
+            <div class="mb-3" id="selectedMemberInfo" style="display: none;">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h6 class="card-title mb-2">Selected Member</h6>
+                  <p class="mb-1"><strong>Name:</strong> <span id="selectedMemberName">-</span></p>
+                  <p class="mb-1"><strong>RFID:</strong> <span id="selectedMemberRfid">-</span></p>
+                  <p class="mb-0"><strong>Current Balance:</strong> <span id="selectedMemberBalance" class="text-success fw-bold">₱0.00</span></p>
+                  <input type="hidden" id="selectedMemberId" value="">
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="refillAmount" class="form-label">Amount to Add</label>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control" id="refillAmount" placeholder="0.00" step="0.01" min="0.01" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="refillNotes" class="form-label">Notes (Optional)</label>
+              <textarea class="form-control" id="refillNotes" rows="2" placeholder="Add any notes about this transaction..."></textarea>
+            </div>
+
+            <div id="refillAlert" style="display: none;"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="submitRefillBtn" disabled>
+            <i class="bi bi-check-circle me-1"></i>Refill Balance
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup Data Modal -->
+  <div class="modal fade" id="backupDataModal" tabindex="-1" aria-labelledby="backupDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="backupDataModalLabel">
+            <i class="bi bi-download me-2"></i>Backup Member Data
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="backupDataForm">
+            <div class="mb-3">
+              <label for="backupDate" class="form-label">Backup Date</label>
+              <input type="date" class="form-control" id="backupDate" required>
+              <small class="text-muted">Select the date to use in the backup filename (defaults to today if not specified)</small>
+            </div>
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>Note:</strong> The backup will include all member data. The filename will include the selected date.
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="downloadBackupBtn">
+            <i class="bi bi-download me-1"></i>Download Backup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restore Members Modal -->
+  <div class="modal fade" id="restoreDataModal" tabindex="-1" aria-labelledby="restoreDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title" id="restoreDataModalLabel">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Restore Deleted Members
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="restoreDataForm">
+            <div class="mb-3">
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="restoreAllCheckbox">
+                <label class="form-check-label" for="restoreAllCheckbox">
+                  <strong>Restore all inactive members</strong> (ignore date filter)
+                </label>
+              </div>
+              <label for="restoreDate" class="form-label">Backup Date</label>
+              <input type="date" class="form-control" id="restoreDate">
+              <small class="text-muted">Select the backup date to restore deleted/inactive members from, or check "Restore all" above</small>
+            </div>
+            <div class="alert alert-warning mb-0">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>Warning:</strong> This will reactivate inactive/deleted members. This action cannot be undone easily.
+            </div>
+            <div id="restoreAlert" style="display: none;" class="mt-3"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-warning" id="confirmRestoreBtn">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Restore Members
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Member Search Functionality
+    (function() {
+      const memberSearchInput = document.getElementById('memberSearchInput');
+      const memberSearchForm = document.getElementById('memberSearchForm');
+      let searchTimeout = null;
+
+      if (memberSearchInput && memberSearchForm) {
+        // Auto-submit search on input with debouncing (after 500ms of no typing)
+        memberSearchInput.addEventListener('input', function(e) {
+          clearTimeout(searchTimeout);
+          const query = e.target.value.trim();
+          
+          // If query is empty, submit immediately to clear search
+          if (query === '') {
+            memberSearchForm.submit();
+            return;
+          }
+          
+          // Debounce: submit after 500ms of no typing
+          searchTimeout = setTimeout(() => {
+            memberSearchForm.submit();
+          }, 500);
+        });
+
+        // Also allow Enter key to submit immediately
+        memberSearchInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            clearTimeout(searchTimeout);
+            e.preventDefault();
+            memberSearchForm.submit();
+          }
+        });
+
+        // Focus search input on page load if it's empty
+        if (!memberSearchInput.value) {
+          // Don't auto-focus as it might be annoying, but we could enable it
+          // memberSearchInput.focus();
+        }
+      }
+    })();
+
+    // Balance Refill Functionality
+    (function() {
+      function getCsrfToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (token) return token;
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          const [key, value] = cookie.trim().split('=');
+          if (key === name) return value;
+        }
+        return '';
+      }
+      
+      const csrftoken = getCsrfToken();
+      
+      let searchTimeout = null;
+      let selectedMember = null;
+
+      const memberSearchInput = document.getElementById('memberSearch');
+      const searchMemberBtn = document.getElementById('searchMemberBtn');
+      const memberSearchResults = document.getElementById('memberSearchResults');
+      const memberResultsList = document.getElementById('memberResultsList');
+      const selectedMemberInfo = document.getElementById('selectedMemberInfo');
+      const selectedMemberName = document.getElementById('selectedMemberName');
+      const selectedMemberRfid = document.getElementById('selectedMemberRfid');
+      const selectedMemberBalance = document.getElementById('selectedMemberBalance');
+      const selectedMemberId = document.getElementById('selectedMemberId');
+      const refillAmount = document.getElementById('refillAmount');
+      const submitRefillBtn = document.getElementById('submitRefillBtn');
+      const refillAlert = document.getElementById('refillAlert');
+      const refillBalanceModal = document.getElementById('refillBalanceModal');
+      const memberFormModal = document.getElementById('memberFormModal');
+      const memberForm = document.getElementById('memberForm');
+      const saveMemberBtn = document.getElementById('saveMemberBtn');
+      const memberFormAlert = document.getElementById('memberFormAlert');
+      const memberModalTitle = document.getElementById('memberFormModalLabel');
+      const memberIdInput = document.getElementById('memberIdInput');
+      const memberFirstName = document.getElementById('memberFirstName');
+      const memberLastName = document.getElementById('memberLastName');
+      const memberEmail = document.getElementById('memberEmail');
+      const memberPhone = document.getElementById('memberPhone');
+      const memberRfid = document.getElementById('memberRfid');
+      const memberTypeSelect = document.getElementById('memberTypeSelect');
+      const memberRole = document.getElementById('memberRole');
+      const memberIsActive = document.getElementById('memberIsActive');
+      const addMemberBtn = document.getElementById('addMemberBtn');
+      const manageMemberTypesBtn = document.getElementById('manageMemberTypesBtn');
+      const memberTypeModal = document.getElementById('memberTypeModal');
+      const memberTypeForm = document.getElementById('memberTypeForm');
+      const saveMemberTypeBtn = document.getElementById('saveMemberTypeBtn');
+      const memberTypeAlert = document.getElementById('memberTypeAlert');
+      const memberTypeName = document.getElementById('memberTypeName');
+      const memberTypeDescription = document.getElementById('memberTypeDescription');
+      const memberTypeIsActive = document.getElementById('memberTypeIsActive');
+      const createUserAccount = document.getElementById('createUserAccount');
+      const memberUsername = document.getElementById('memberUsername');
+      const memberPassword = document.getElementById('memberPassword');
+      const userAccountFields = document.getElementById('userAccountFields');
+      const userPasswordFields = document.getElementById('userPasswordFields');
+
+      // Toggle user account fields visibility
+      window.toggleUserAccountFields = function() {
+        const showFields = createUserAccount.checked;
+        if (userAccountFields) userAccountFields.style.display = showFields ? 'block' : 'none';
+        if (userPasswordFields) userPasswordFields.style.display = showFields ? 'block' : 'none';
+        if (!showFields) {
+          if (memberPassword) memberPassword.value = '';
+        }
+      };
+
+      // Generate username from first name and last name
+      function generateUsername(firstName, lastName) {
+        if (!firstName && !lastName) return '';
+        
+        // Remove special characters and convert to lowercase
+        const cleanName = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const first = cleanName(firstName);
+        const last = cleanName(lastName);
+        
+        if (first && last) {
+          return `${first}.${last}`;
+        } else if (first) {
+          return first;
+        } else if (last) {
+          return last;
+        }
+        return '';
+      }
+
+      // Auto-generate username state
+      let usernameAutoGenerated = false;
+      let isUsernameManuallyEdited = false;
+      let lastAutoGeneratedUsername = '';
+      let autoGenListenersSetup = false;
+      
+      // Auto-generate username when first name or last name changes (only for new members)
+      function setupAutoUsernameGeneration() {
+        if (!memberFirstName || !memberLastName || !memberUsername || !createUserAccount) return;
+        if (autoGenListenersSetup) return; // Only setup once
+        autoGenListenersSetup = true;
+        
+        // Track manual edits to username field
+        if (memberUsername) {
+          memberUsername.addEventListener('input', function() {
+            // If user is typing and it's different from the last auto-generated username, mark as manual
+            if (this.value !== lastAutoGeneratedUsername) {
+              isUsernameManuallyEdited = true;
+              usernameAutoGenerated = false;
+            }
+          });
+          
+          // Reset manual edit flag when field is cleared or modal opens
+          memberUsername.addEventListener('blur', function() {
+            if (!this.value) {
+              isUsernameManuallyEdited = false;
+              usernameAutoGenerated = false;
+            }
+          });
+        }
+        
+        function updateUsernameFromName() {
+          // Only auto-generate for new members (no memberIdInput value)
+          if (memberIdInput && memberIdInput.value) return; // Don't auto-generate when editing
+          
+          // Don't overwrite if user manually edited
+          if (isUsernameManuallyEdited && memberUsername.value) return;
+          
+          const firstName = memberFirstName.value.trim();
+          const lastName = memberLastName.value.trim();
+          
+          if (firstName || lastName) {
+            const generatedUsername = generateUsername(firstName, lastName);
+            if (generatedUsername) {
+              memberUsername.value = generatedUsername;
+              lastAutoGeneratedUsername = generatedUsername;
+              usernameAutoGenerated = true;
+              isUsernameManuallyEdited = false;
+              
+              // Auto-check "Create User Account" checkbox if both names are filled
+              if (firstName && lastName && !createUserAccount.checked) {
+                createUserAccount.checked = true;
+                toggleUserAccountFields();
+              }
+            }
+          }
+        }
+        
+        // Listen to first name and last name changes
+        if (memberFirstName) {
+          memberFirstName.addEventListener('input', updateUsernameFromName);
+        }
+        if (memberLastName) {
+          memberLastName.addEventListener('input', updateUsernameFromName);
+        }
+      }
+      
+      // Initialize auto username generation when page loads
+      setupAutoUsernameGeneration();
+
+      // Initialize: Remove Staff, Cashier and Admin options for staff users on page load
+      // Also disable Member Type dropdown for staff users
+      {% if is_staff %}
+      (function() {
+        const staffOption = memberRole.querySelector('option[value="staff"]');
+        const cashierOption = memberRole.querySelector('option[value="cashier"]');
+        const adminOption = memberRole.querySelector('option[value="admin"]');
+        if (staffOption) staffOption.remove();
+        if (cashierOption) cashierOption.remove();
+        if (adminOption) adminOption.remove();
+        // Disable Member Type dropdown for staff
+        if (memberTypeSelect) {
+          memberTypeSelect.disabled = true;
+        }
+      })();
+      {% endif %}
+
+      function showAlert(message, type = 'success') {
+        refillAlert.className = `alert alert-${type} alert-dismissible fade show`;
+        refillAlert.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        refillAlert.style.display = 'block';
+        setTimeout(() => {
+          refillAlert.style.display = 'none';
+        }, 5000);
+      }
+
+      function showInlineAlert(target, message, type = 'success') {
+        if (!target) return;
+        target.className = `alert alert-${type} alert-dismissible fade show`;
+        target.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        target.style.display = 'block';
+        setTimeout(() => {
+          target.style.display = 'none';
+        }, 5000);
+      }
+
+      function openMemberModal(mode = 'add', data = {}) {
+        memberForm.reset();
+        memberFormAlert.style.display = 'none';
+        memberIdInput.value = mode === 'edit' ? data.id || '' : '';
+        memberModalTitle.textContent = mode === 'edit' ? 'Edit Member' : 'Add Member';
+
+        memberFirstName.value = data.first_name || '';
+        memberLastName.value = data.last_name || '';
+        memberEmail.value = data.email || '';
+        memberPhone.value = data.phone || '';
+        memberRfid.value = data.rfid || '';
+        
+        // Handle role selection - if staff, only allow 'member' role
+        {% if is_staff %}
+        // Remove Staff, Cashier and Admin options for staff users
+        const staffOption = memberRole.querySelector('option[value="staff"]');
+        const cashierOption = memberRole.querySelector('option[value="cashier"]');
+        const adminOption = memberRole.querySelector('option[value="admin"]');
+        if (staffOption) staffOption.remove();
+        if (cashierOption) cashierOption.remove();
+        if (adminOption) adminOption.remove();
+        
+        // Staff can only set role to 'member'
+        if (mode === 'edit' && data.role && data.role !== 'member') {
+          // If editing a member with admin/cashier/staff role, keep it but disable the field
+          memberRole.value = data.role;
+          memberRole.disabled = true;
+        } else {
+          // For new members or members with 'member' role, set to 'member' and disable
+          memberRole.value = 'member';
+          memberRole.disabled = true;
+        }
+        {% else %}
+        // Ensure all options are available for non-staff users
+        let hasStaff = memberRole.querySelector('option[value="staff"]');
+        let hasCashier = memberRole.querySelector('option[value="cashier"]');
+        let hasAdmin = memberRole.querySelector('option[value="admin"]');
+        if (!hasStaff) {
+          const staffOpt = document.createElement('option');
+          staffOpt.value = 'staff';
+          staffOpt.textContent = 'Staff';
+          // Insert after Member option
+          const memberOption = memberRole.querySelector('option[value="member"]');
+          if (memberOption && memberOption.nextSibling) {
+            memberRole.insertBefore(staffOpt, memberOption.nextSibling);
+          } else {
+            memberRole.appendChild(staffOpt);
+          }
+        }
+        if (!hasCashier) {
+          const cashierOpt = document.createElement('option');
+          cashierOpt.value = 'cashier';
+          cashierOpt.textContent = 'Cashier';
+          memberRole.appendChild(cashierOpt);
+        }
+        if (!hasAdmin) {
+          const adminOpt = document.createElement('option');
+          adminOpt.value = 'admin';
+          adminOpt.textContent = 'Admin';
+          memberRole.appendChild(adminOpt);
+        }
+        memberRole.value = data.role || 'member';
+        memberRole.disabled = false;
+        {% endif %}
+        
+        memberIsActive.checked = data.is_active !== undefined ? data.is_active === true || data.is_active === 'True' || data.is_active === 'true' || data.is_active === '1' : true;
+        if (memberTypeSelect) {
+          memberTypeSelect.value = data.member_type_id || '';
+          // Disable Member Type dropdown for staff users
+          {% if is_staff %}
+          memberTypeSelect.disabled = true;
+          {% else %}
+          memberTypeSelect.disabled = false;
+          {% endif %}
+        }
+
+        // Handle user account fields
+        if (createUserAccount && memberUsername && memberPassword) {
+          const hasUser = data.has_user || (mode === 'edit' && data.user_id);
+          createUserAccount.checked = hasUser || false;
+          toggleUserAccountFields();
+          
+          // Reset auto-generation state when modal opens
+          usernameAutoGenerated = false;
+          isUsernameManuallyEdited = false;
+          lastAutoGeneratedUsername = '';
+          
+          // For editing, show existing username but allow password change
+          if (mode === 'edit' && data.username) {
+            memberUsername.value = data.username;
+            memberUsername.readOnly = true;
+            memberPassword.placeholder = 'Enter new password (leave blank to keep current password)';
+            memberPassword.value = '';
+          } else {
+            // For new members, reset fields
+            memberUsername.value = '';
+            memberUsername.readOnly = false;
+            memberPassword.placeholder = 'Enter password';
+            memberPassword.value = '';
+          }
+        }
+
+        const modal = new bootstrap.Modal(memberFormModal);
+        modal.show();
+      }
+
+      function submitMemberForm() {
+        // Handle member_type_id - convert to integer if provided, null if empty
+        let memberTypeId = memberTypeSelect.value ? memberTypeSelect.value.trim() : '';
+        memberTypeId = memberTypeId ? parseInt(memberTypeId, 10) : null;
+        
+        const payload = {
+          first_name: memberFirstName.value.trim(),
+          last_name: memberLastName.value.trim(),
+          email: memberEmail.value.trim(),
+          phone: memberPhone.value.trim(),
+          rfid: memberRfid.value.trim(),
+          member_type_id: memberTypeId,
+          role: memberRole.value,
+          is_active: memberIsActive.checked,
+        };
+
+        if (!payload.first_name || !payload.last_name) {
+          showInlineAlert(memberFormAlert, 'First and last name are required', 'warning');
+          return;
+        }
+        if (!payload.rfid) {
+          showInlineAlert(memberFormAlert, 'RFID card number is required', 'warning');
+          return;
+        }
+
+        // Handle user account creation
+        if (createUserAccount && createUserAccount.checked) {
+          const username = memberUsername ? memberUsername.value.trim() : '';
+          const password = memberPassword ? memberPassword.value.trim() : '';
+          
+          if (!username) {
+            showInlineAlert(memberFormAlert, 'Username is required when creating a user account', 'warning');
+            return;
+          }
+          
+          const memberId = memberIdInput.value;
+          // Password required only when creating new user account (not when updating existing)
+          if (!memberId && !password) {
+            showInlineAlert(memberFormAlert, 'Password is required when creating a new user account', 'warning');
+            return;
+          }
+          
+          payload.create_user_account = true;
+          payload.username = username;
+          if (password) {
+            payload.password = password;
+          }
+        }
+
+        const memberId = memberIdInput.value;
+        const url = memberId ? '/api/members/update/' : '/api/members/create/';
+        if (memberId) {
+          payload.member_id = memberId;
+        }
+
+        saveMemberBtn.disabled = true;
+        saveMemberBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showInlineAlert(memberFormAlert, data.message || 'Saved successfully', 'success');
+            setTimeout(() => window.location.reload(), 800);
+          } else {
+            showInlineAlert(memberFormAlert, data.error || 'Unable to save member', 'danger');
+            saveMemberBtn.disabled = false;
+            saveMemberBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Save Member';
+          }
+        })
+        .catch(() => {
+          showInlineAlert(memberFormAlert, 'Server error while saving member', 'danger');
+          saveMemberBtn.disabled = false;
+          saveMemberBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Save Member';
+        });
+      }
+
+      function submitMemberTypeForm() {
+        const payload = {
+          name: memberTypeName.value.trim(),
+          description: memberTypeDescription.value.trim(),
+          is_active: memberTypeIsActive.checked,
+        };
+
+        if (!payload.name) {
+          showInlineAlert(memberTypeAlert, 'Name is required', 'warning');
+          return;
+        }
+
+        saveMemberTypeBtn.disabled = true;
+        saveMemberTypeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+        fetch('/api/member-types/create/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showInlineAlert(memberTypeAlert, data.message || 'Member type saved', 'success');
+            setTimeout(() => window.location.reload(), 800);
+          } else {
+            showInlineAlert(memberTypeAlert, data.error || 'Unable to save member type', 'danger');
+            saveMemberTypeBtn.disabled = false;
+            saveMemberTypeBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Add Type';
+          }
+        })
+        .catch(() => {
+          showInlineAlert(memberTypeAlert, 'Server error while saving member type', 'danger');
+          saveMemberTypeBtn.disabled = false;
+          saveMemberTypeBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Add Type';
+        });
+      }
+
+      if (addMemberBtn) {
+        addMemberBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Close the dropdown menu if it's open
+          const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('actionsDropdown'));
+          if (dropdown) {
+            dropdown.hide();
+          }
+          // Small delay to allow dropdown to close before opening modal
+          setTimeout(() => {
+            openMemberModal('add');
+          }, 100);
+        });
+      }
+
+      if (manageMemberTypesBtn) {
+        manageMemberTypesBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Close the dropdown menu if it's open
+          const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('actionsDropdown'));
+          if (dropdown) {
+            dropdown.hide();
+          }
+          // Small delay to allow dropdown to close before opening modal
+          setTimeout(() => {
+            memberTypeForm.reset();
+            memberTypeAlert.style.display = 'none';
+            const modal = new bootstrap.Modal(memberTypeModal);
+            modal.show();
+          }, 100);
+        });
+      }
+
+      document.querySelectorAll('.edit-member-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openMemberModal('edit', {
+            id: btn.dataset.id,
+            first_name: btn.dataset.firstName,
+            last_name: btn.dataset.lastName,
+            email: btn.dataset.email,
+            phone: btn.dataset.phone,
+            rfid: btn.dataset.rfid,
+            member_type_id: btn.dataset.memberType,
+            role: btn.dataset.role,
+            is_active: btn.dataset.active,
+            user_id: btn.dataset.userId || null,
+            username: btn.dataset.username || '',
+            has_user: btn.dataset.hasUser === 'true',
+          });
+        });
+      });
+
+      if (saveMemberBtn) {
+        saveMemberBtn.addEventListener('click', submitMemberForm);
+      }
+
+      if (saveMemberTypeBtn) {
+        saveMemberTypeBtn.addEventListener('click', submitMemberTypeForm);
+      }
+
+      function searchMembers(query) {
+        if (!query || query.length < 2) {
+          memberSearchResults.style.display = 'none';
+          return;
+        }
+
+        fetch(`/api/search-members/?q=${encodeURIComponent(query)}`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': csrftoken
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.members && data.members.length > 0) {
+            memberResultsList.innerHTML = '';
+            data.members.forEach(member => {
+              const item = document.createElement('a');
+              item.href = '#';
+              item.className = 'list-group-item list-group-item-action';
+              item.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                  <div>
+                    <h6 class="mb-1">${member.name}</h6>
+                    <small class="text-muted">RFID: ${member.rfid} | Email: ${member.email || 'N/A'}</small>
+                  </div>
+                  <div class="text-end">
+                    <small class="text-success fw-bold">₱${parseFloat(member.current_balance).toFixed(2)}</small>
+                  </div>
+                </div>
+              `;
+              item.addEventListener('click', (e) => {
+                e.preventDefault();
+                selectMember(member);
+              });
+              memberResultsList.appendChild(item);
+            });
+            memberSearchResults.style.display = 'block';
+          } else {
+            memberResultsList.innerHTML = '<div class="list-group-item text-muted text-center">No members found</div>';
+            memberSearchResults.style.display = 'block';
+          }
+        })
+        .catch(err => {
+          console.error('Search error:', err);
+          showAlert('Error searching members', 'danger');
+        });
+      }
+
+      function selectMember(member) {
+        selectedMember = member;
+        selectedMemberName.textContent = member.name;
+        selectedMemberRfid.textContent = member.rfid;
+        selectedMemberBalance.textContent = `₱${parseFloat(member.current_balance).toFixed(2)}`;
+        selectedMemberId.value = member.id;
+        selectedMemberInfo.style.display = 'block';
+        memberSearchResults.style.display = 'none';
+        memberSearchInput.value = member.name;
+        updateSubmitButton();
+      }
+
+      function updateSubmitButton() {
+        const hasMember = selectedMember !== null;
+        const hasAmount = refillAmount.value && parseFloat(refillAmount.value) > 0;
+        submitRefillBtn.disabled = !(hasMember && hasAmount);
+      }
+
+      // Quick refill function
+      window.quickRefill = function(memberId, memberName, memberRfid, currentBalance) {
+        selectedMember = {
+          id: memberId,
+          name: memberName,
+          rfid: memberRfid,
+          current_balance: currentBalance.toString()
+        };
+        selectedMemberName.textContent = memberName;
+        selectedMemberRfid.textContent = memberRfid;
+        selectedMemberBalance.textContent = `₱${parseFloat(currentBalance).toFixed(2)}`;
+        selectedMemberId.value = memberId;
+        selectedMemberInfo.style.display = 'block';
+        memberSearchInput.value = memberName;
+        memberSearchResults.style.display = 'none';
+        
+        const modal = new bootstrap.Modal(refillBalanceModal);
+        modal.show();
+        updateSubmitButton();
+      };
+
+      // Attach event listeners to quick refill buttons (using data attributes for safety)
+      document.querySelectorAll('.quick-refill-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const memberId = this.dataset.memberId;
+          const memberName = this.dataset.memberName;
+          const memberRfid = this.dataset.memberRfid;
+          const currentBalance = parseFloat(this.dataset.memberBalance);
+          quickRefill(memberId, memberName, memberRfid, currentBalance);
+        });
+      });
+
+      // Search on input with debounce
+      if (memberSearchInput) {
+        memberSearchInput.addEventListener('input', (e) => {
+          clearTimeout(searchTimeout);
+          const query = e.target.value.trim();
+          if (query.length >= 2) {
+            searchTimeout = setTimeout(() => searchMembers(query), 300);
+          } else {
+            memberSearchResults.style.display = 'none';
+            selectedMember = null;
+            selectedMemberInfo.style.display = 'none';
+            updateSubmitButton();
+          }
+        });
+      }
+
+      if (searchMemberBtn) {
+        searchMemberBtn.addEventListener('click', () => {
+          const query = memberSearchInput.value.trim();
+          if (query.length >= 2) {
+            searchMembers(query);
+          }
+        });
+      }
+
+      if (refillAmount) {
+        refillAmount.addEventListener('input', updateSubmitButton);
+      }
+
+      // Handle form submission
+      if (submitRefillBtn) {
+        submitRefillBtn.addEventListener('click', () => {
+          if (!selectedMember || !refillAmount.value) {
+            showAlert('Please select a member and enter an amount', 'warning');
+            return;
+          }
+
+          const amount = parseFloat(refillAmount.value);
+          if (isNaN(amount) || amount <= 0) {
+            showAlert('Please enter a valid amount greater than zero', 'warning');
+            return;
+          }
+
+          submitRefillBtn.disabled = true;
+          submitRefillBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+
+          const payload = {
+            member_id: selectedMember.id,
+            amount: amount,
+            notes: document.getElementById('refillNotes').value.trim()
+          };
+
+          fetch('/api/refill-balance/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(payload)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              showAlert(data.message, 'success');
+              // Reset form
+              memberSearchInput.value = '';
+              refillAmount.value = '';
+              document.getElementById('refillNotes').value = '';
+              selectedMember = null;
+              selectedMemberInfo.style.display = 'none';
+              memberSearchResults.style.display = 'none';
+              
+              // Reload page after 1.5 seconds to refresh data
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            } else {
+              showAlert(data.error || 'Failed to refill balance', 'danger');
+              submitRefillBtn.disabled = false;
+              submitRefillBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Refill Balance';
+            }
+          })
+          .catch(err => {
+            console.error('Refill error:', err);
+            showAlert('Error processing balance refill', 'danger');
+            submitRefillBtn.disabled = false;
+            submitRefillBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Refill Balance';
+          });
+        });
+      }
+
+      // Reset form when modal is closed
+      if (refillBalanceModal) {
+        refillBalanceModal.addEventListener('hidden.bs.modal', () => {
+          memberSearchInput.value = '';
+          refillAmount.value = '';
+          document.getElementById('refillNotes').value = '';
+          selectedMember = null;
+          selectedMemberInfo.style.display = 'none';
+          memberSearchResults.style.display = 'none';
+          refillAlert.style.display = 'none';
+          submitRefillBtn.disabled = true;
+          submitRefillBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Refill Balance';
+        });
+      }
+    })();
+
+    // Backup Data Modal Functionality
+    (function() {
+      const backupDataModal = document.getElementById('backupDataModal');
+      const backupDateInput = document.getElementById('backupDate');
+      const downloadBackupBtn = document.getElementById('downloadBackupBtn');
+      const backupDataBtn = document.getElementById('backupDataBtn');
+      
+      // Handle backup data button click - close dropdown and open modal
+      if (backupDataBtn) {
+        backupDataBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Close the dropdown menu if it's open
+          const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('actionsDropdown'));
+          if (dropdown) {
+            dropdown.hide();
+          }
+          // Let Bootstrap handle modal opening via data-bs-toggle
+        });
+      }
+
+      // Set default date to today when modal opens
+      if (backupDataModal && backupDateInput) {
+        backupDataModal.addEventListener('show.bs.modal', () => {
+          const today = new Date().toISOString().split('T')[0];
+          backupDateInput.value = today;
+        });
+
+        // Handle download button click
+        if (downloadBackupBtn) {
+          downloadBackupBtn.addEventListener('click', () => {
+            const selectedDate = backupDateInput.value;
+            if (selectedDate) {
+              const backupUrl = '{% url "backup_members_data" %}?date=' + selectedDate;
+              window.location.href = backupUrl;
+              // Close modal after starting download
+              const modal = bootstrap.Modal.getInstance(backupDataModal);
+              if (modal) {
+                modal.hide();
+              }
+            }
+          });
+        }
+      }
+    })();
+
+    // Restore Members Modal Functionality
+    (function() {
+      function getCsrfToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (token) return token;
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          const [key, value] = cookie.trim().split('=');
+          if (key === name) return value;
+        }
+        return '';
+      }
+
+      const restoreDataModal = document.getElementById('restoreDataModal');
+      const restoreDateInput = document.getElementById('restoreDate');
+      const confirmRestoreBtn = document.getElementById('confirmRestoreBtn');
+      const restoreAlert = document.getElementById('restoreAlert');
+      const restoreDataBtn = document.getElementById('restoreDataBtn');
+      const restoreAllCheckbox = document.getElementById('restoreAllCheckbox');
+      
+      // Handle restore data button click - close dropdown and open modal
+      if (restoreDataBtn) {
+        restoreDataBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Close the dropdown menu if it's open
+          const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('actionsDropdown'));
+          if (dropdown) {
+            dropdown.hide();
+          }
+          // Let Bootstrap handle modal opening via data-bs-toggle
+        });
+      }
+
+      // Set default date to today when modal opens
+      if (restoreDataModal && restoreDateInput) {
+        restoreDataModal.addEventListener('show.bs.modal', () => {
+          const today = new Date().toISOString().split('T')[0];
+          restoreDateInput.value = today;
+          if (restoreAllCheckbox) restoreAllCheckbox.checked = false;
+          if (restoreDateInput) restoreDateInput.disabled = false;
+          restoreAlert.style.display = 'none';
+        });
+
+        // Toggle date input based on restore all checkbox
+        if (restoreAllCheckbox) {
+          restoreAllCheckbox.addEventListener('change', () => {
+            if (restoreDateInput) {
+              restoreDateInput.disabled = restoreAllCheckbox.checked;
+              restoreDateInput.required = !restoreAllCheckbox.checked;
+            }
+          });
+        }
+
+        // Handle restore button click
+        if (confirmRestoreBtn) {
+          confirmRestoreBtn.addEventListener('click', async () => {
+            const restoreAll = restoreAllCheckbox ? restoreAllCheckbox.checked : false;
+            const selectedDate = restoreDateInput ? restoreDateInput.value : '';
+
+            if (!restoreAll && !selectedDate) {
+              restoreAlert.className = 'alert alert-danger mt-3';
+              restoreAlert.innerHTML = 'Please select a backup date or check "Restore all inactive members"';
+              restoreAlert.style.display = 'block';
+              return;
+            }
+
+            // Confirm action
+            const confirmMessage = restoreAll 
+              ? 'Are you sure you want to restore ALL inactive/deleted members? This will reactivate them.'
+              : `Are you sure you want to restore all deleted/inactive members from ${selectedDate}? This will reactivate them.`;
+            
+            if (!confirm(confirmMessage)) {
+              return;
+            }
+
+            // Disable button and show loading
+            confirmRestoreBtn.disabled = true;
+            confirmRestoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Restoring...';
+
+            try {
+              const requestBody = restoreAll 
+                ? { restore_all: true }
+                : { date: selectedDate };
+
+              const response = await fetch('{% url "restore_members_data" %}', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(requestBody)
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                restoreAlert.className = 'alert alert-success mt-3';
+                restoreAlert.innerHTML = `
+                  <strong>Success!</strong> ${data.message}<br>
+                  <small>Restored ${data.restored_count} member(s).</small>
+                `;
+                restoreAlert.style.display = 'block';
+
+                // Reload page after 2 seconds to see restored members
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
+              } else {
+                restoreAlert.className = 'alert alert-danger mt-3';
+                restoreAlert.innerHTML = `<strong>Error:</strong> ${data.error || 'Failed to restore members'}`;
+                restoreAlert.style.display = 'block';
+                confirmRestoreBtn.disabled = false;
+                confirmRestoreBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i>Restore Members';
+              }
+            } catch (error) {
+              restoreAlert.className = 'alert alert-danger mt-3';
+              restoreAlert.innerHTML = `<strong>Error:</strong> ${error.message}`;
+              restoreAlert.style.display = 'block';
+              confirmRestoreBtn.disabled = false;
+              confirmRestoreBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i>Restore Members';
+            }
+          });
+        }
+      }
+    })();
+
+    // Logout confirmation handler
+    (function() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      const logoutForm = document.getElementById('logoutForm');
+      
+      if (logoutBtn && logoutForm) {
+        logoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          showLogoutConfirmModal();
+        });
+      }
+
+      function showLogoutConfirmModal() {
+        const modal = document.getElementById('logoutConfirmModal');
+        if (!modal) {
+          console.error('Logout confirmation modal not found');
+          // Fallback to browser confirm
+          if (confirm('Are you sure you want to logout?')) {
+            logoutForm.submit();
+          }
+          return;
+        }
+        
+        // Check if Bootstrap is available
+        if (typeof bootstrap === 'undefined') {
+          console.error('Bootstrap is not loaded');
+          // Fallback to browser confirm
+          if (confirm('Are you sure you want to logout?')) {
+            logoutForm.submit();
+          }
+          return;
+        }
+        
+        // Get or create modal instance
+        let bsModal = bootstrap.Modal.getInstance(modal);
+        if (!bsModal) {
+          bsModal = new bootstrap.Modal(modal, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+          });
+        }
+        
+        // Remove existing event listeners to prevent duplicates
+        const confirmBtn = modal.querySelector('.btn-confirm');
+        const cancelBtn = modal.querySelector('.btn-cancel');
+        
+        // Clone and replace buttons to remove old listeners
+        if (confirmBtn) {
+          const newConfirmBtn = confirmBtn.cloneNode(true);
+          confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+          newConfirmBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            bsModal.hide();
+            setTimeout(function() {
+              logoutForm.submit();
+            }, 300);
+          });
+        }
+        
+        if (cancelBtn) {
+          const newCancelBtn = cancelBtn.cloneNode(true);
+          cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+          newCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            bsModal.hide();
+          });
+        }
+        
+        // Show modal
+        try {
+          bsModal.show();
+        } catch (error) {
+          console.error('Error showing modal:', error);
+          // Fallback to browser confirm
+          if (confirm('Are you sure you want to logout?')) {
+            logoutForm.submit();
+          }
+        }
+      }
+    })();
+  </script>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="logoutConfirmModalLabel">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Confirm Logout
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
+          <p>Are you sure you want to logout?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-confirm">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

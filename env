@@ -1,0 +1,56 @@
+USER
+user 
+Aa18-00188
+
+ADMIN
+pc
+admin123
+
+features 
+no stocks notify the admin true email
+5x search make automatically send the email to the admin
+
+Transaction ID Breakdown
+TXN202512111424396464 follows this format:
+TXN — prefix
+20251211 — date: December 11, 2025
+142439 — time: 14:24:39 (2:24:39 PM)
+6464 — 4-digit random suffix
+
+@http://127.0.0.1:8000/admin/  if user try to access this verify login  for security \
+
+
+	dasdadasd asdasd	pc	0008265121	Admin
+    customer 2 sada	user	0008265033
+    dasdadasd asdasd	staff	1234
+
+
+delete all the data in the database 
+python manage.py flush
+
+from myapp.models import ModelA, ModelB, ModelC
+
+ModelA.objects.all().delete()
+ModelB.objects.all().delete()
+ModelC.objects.all().delete()
+
+
+
+mobile app 
+npm Start
+
+
+run the terminal laptop
+python manage.py runserver 0.0.0.0:8000
+
+
+create an app
+cd mobile_app && eas build --platform android --profile preview
+or
+npm install -g eas-cli
+
+cd mobile_app
+eas build:list
+
+
+fix the endpoint of the user make use the own credentials of rfid id usse to the paying method of debit if not the own owner decline the method of debit 

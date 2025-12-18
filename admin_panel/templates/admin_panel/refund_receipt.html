@@ -1,0 +1,508 @@
+{% load currency_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Refund Receipt</title>
+    <style>
+        @page { size: 58mm auto; margin: 2mm; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", monospace;
+            background: #f5f5f5;
+        }
+        @media screen {
+            body {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+        }
+        .receipt-paper {
+            width: 56mm;
+            margin: 0 auto;
+            padding: 2mm;
+            font-size: 11pt;
+            line-height: 1.3;
+            color: #000;
+            background: #fff;
+        }
+        @media screen {
+            .receipt-paper {
+                border: 2px dashed #333;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+        }
+        .rp-center { text-align: center; }
+        .rp-title { 
+            font-size: 15pt; 
+            font-weight: bold; 
+            margin-bottom: 2mm;
+        }
+        .rp-sub { 
+            font-size: 11pt; 
+            margin-bottom: 1mm;
+        }
+        .rp-address {
+            font-size: 11pt;
+            margin-bottom: 1mm;
+        }
+        .rp-phone {
+            font-size: 11pt;
+            margin-bottom: 2mm;
+        }
+        .rp-sep {
+            border-top: 1px dashed #000;
+            margin: 3mm 0;
+            width: 100%;
+        }
+        .rp-receipt-type {
+            text-align: center;
+            font-size: 15pt;
+            font-weight: bold;
+            margin: 2mm 0;
+        }
+        .rp-items-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 12pt;
+            margin: 2mm 0 1mm 0;
+            padding-bottom: 1mm;
+            border-bottom: 1px solid #000;
+        }
+        .rp-item-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1mm 0;
+            font-size: 11pt;
+        }
+        .rp-item-description {
+            flex: 1;
+            text-align: left;
+        }
+        .rp-item-price {
+            text-align: right;
+            min-width: 30%;
+        }
+        .rp-total-section {
+            margin-top: 2mm;
+        }
+        .rp-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5mm 0;
+            font-size: 11pt;
+        }
+        .rp-total-label {
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        .rp-total-value {
+            font-weight: bold;
+            text-align: right;
+        }
+        .rp-thanks {
+            text-align: center;
+            font-size: 11pt;
+            font-weight: bold;
+            margin-top: 3mm;
+            margin-bottom: 2mm;
+        }
+        .rp-barcode {
+            text-align: center;
+            margin: 2mm 0;
+        }
+        .rp-barcode img {
+            max-width: 100%;
+            height: auto;
+        }
+        .rp-section {
+            margin: 2mm 0;
+        }
+        .rp-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 1.5mm 0;
+            font-size: 11pt;
+            gap: 5px;
+        }
+        .rp-line-label {
+            font-weight: bold;
+            font-size: 12pt;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .rp-line span:last-child {
+            text-align: right;
+            flex: 0 1 auto;
+            min-width: 0;
+            word-break: break-word;
+            margin-left: auto;
+        }
+        .print-controls {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        #printBtn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        #printBtn:hover {
+            background-color: #0056b3;
+        }
+        #closeBtn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #closeBtn:hover {
+            background-color: #545b62;
+        }
+
+        .copy-label {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 3mm 0;
+            padding: 2mm 0;
+            border-top: 2px dashed #000;
+            border-bottom: 2px dashed #000;
+        }
+        .copy-separator {
+            text-align: center;
+            margin: 5mm 0;
+            font-size: 9pt;
+            letter-spacing: 2px;
+            border-top: 1px dashed #000;
+            padding-top: 3mm;
+        }
+        @media print {
+            @page { size: 58mm auto; margin: 2mm; }
+            .receipt-paper { width: 56mm !important; }
+            .print-controls { display: none !important; }
+            .copy-separator { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-controls">
+        <button id="printBtn" onclick="window.print()">🖨️ Print Receipt</button>
+        <button id="closeBtn" onclick="window.close()">✕ Close</button>
+    </div>
+<div class="receipt-paper">
+
+    <!-- CUSTOMER COPY -->
+    <div class="copy-label">CUSTOMER COPY</div>
+
+    <!-- Header Section -->
+    <div class="rp-center">
+        <div class="rp-title">{{ shop_name|default:"SHOP NAME" }}</div>
+        <div class="rp-address">{{ shop_address|default:"Address: Lorem Ipsum, 23-10" }}</div>
+        <div class="rp-phone">{{ shop_phone|default:"Telp. 11223344" }}</div>
+    </div>
+
+    <div class="rp-sep"></div>
+
+    <!-- Receipt Type -->
+    <div class="rp-receipt-type">REFUND RECEIPT</div>
+
+    <div class="rp-sep"></div>
+
+    <!-- Transaction Info -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Original Txn:</span>
+            <span>#{{ transaction.transaction_number }}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Refund Date:</span>
+            <span>{{ refund_date|date:"m/d/Y H:i" }}</span>
+        </div>
+    </div>
+
+    <!-- Member Info -->
+    {% if member %}
+    <div class="rp-sep"></div>
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Member:</span>
+            <span>{{ member.full_name }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rp-sep"></div>
+
+    <!-- Items Header -->
+    <div class="rp-items-header">
+        <span class="rp-item-description">Description</span>
+        <span class="rp-item-price">Price</span>
+    </div>
+
+    <!-- Items List -->
+    {% for item in transaction.items.all %}
+    <div class="rp-item-row">
+        <span class="rp-item-description">{% if item.quantity > 1 %}{{ item.product_name }} (x{{ item.quantity }}){% else %}{{ item.product_name }}{% endif %}</span>
+        <span class="rp-item-price">₱{{ item.total_price|currency }}</span>
+    </div>
+    {% endfor %}
+
+    <div class="rp-sep"></div>
+
+    <!-- Total Section -->
+    <div class="rp-total-section">
+        <div class="rp-total-row">
+            <span class="rp-total-label">Total</span>
+            <span class="rp-total-value">₱{{ transaction.total_amount|currency }}</span>
+        </div>
+    </div>
+
+    <!-- Refund Method -->
+    <div class="rp-sep"></div>
+    <div class="rp-section">
+        {% if show_balance_refund %}
+            <div class="rp-line">
+                <span class="rp-line-label">Method:</span>
+                <span>Refunded to Balance</span>
+            </div>
+            <div class="rp-line">
+                <span class="rp-line-label">Balance Before:</span>
+                <span>₱{{ balance_before|currency }}</span>
+            </div>
+            <div class="rp-line">
+                <span class="rp-line-label">Balance After:</span>
+                <span>₱{{ balance_after|currency }}</span>
+            </div>
+        {% elif show_cash_refund %}
+            <div class="rp-line">
+                <span class="rp-line-label">Method:</span>
+                <span>Cash Refund</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Reason -->
+    {% if refund_reason %}
+    <div class="rp-sep"></div>
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Reason:</span>
+            <span>{{ refund_reason }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rp-sep"></div>
+
+    <!-- Footer -->
+    <div class="rp-thanks">THANK YOU!</div>
+
+    <!-- Separator between copies -->
+    <div class="copy-separator">═══════════════════════════</div>
+
+    <!-- MERCHANT COPY -->
+    <div class="copy-label">MERCHANT COPY</div>
+
+    <!-- Header Section -->
+    <div class="rp-center">
+        <div class="rp-title">{{ shop_name|default:"SHOP NAME" }}</div>
+        <div class="rp-address">{{ shop_address|default:"Address: Lorem Ipsum, 23-10" }}</div>
+        <div class="rp-phone">{{ shop_phone|default:"Telp. 11223344" }}</div>
+    </div>
+
+    <div class="rp-sep"></div>
+
+    <!-- Receipt Type -->
+    <div class="rp-receipt-type">REFUND RECEIPT</div>
+
+    <div class="rp-sep"></div>
+
+    <!-- Transaction Info -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Original Txn:</span>
+            <span>#{{ transaction.transaction_number }}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Refund Date:</span>
+            <span>{{ refund_date|date:"m/d/Y H:i" }}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Refund ID:</span>
+            <span>#{{ transaction.id }}</span>
+        </div>
+    </div>
+
+    <!-- Member Info -->
+    {% if member %}
+    <div class="rp-sep"></div>
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Member:</span>
+            <span>{{ member.full_name }}</span>
+        </div>
+        {% if member.rfid_card_number %}
+        <div class="rp-line">
+            <span class="rp-line-label">RFID:</span>
+            <span>{{ member.rfid_card_number }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="rp-sep"></div>
+
+    <!-- Items Header -->
+    <div class="rp-items-header">
+        <span class="rp-item-description">Description</span>
+        <span class="rp-item-price">Price</span>
+    </div>
+
+    <!-- Items List -->
+    {% for item in transaction.items.all %}
+    <div class="rp-item-row">
+        <span class="rp-item-description">{% if item.quantity > 1 %}{{ item.product_name }} (x{{ item.quantity }}){% else %}{{ item.product_name }}{% endif %}</span>
+        <span class="rp-item-price">₱{{ item.total_price|currency }}</span>
+    </div>
+    {% endfor %}
+
+    <div class="rp-sep"></div>
+
+    <!-- Total Section -->
+    <div class="rp-total-section">
+        <div class="rp-total-row">
+            <span class="rp-total-label">Total</span>
+            <span class="rp-total-value">₱{{ transaction.total_amount|currency }}</span>
+        </div>
+    </div>
+
+    <!-- Refund Method -->
+    <div class="rp-sep"></div>
+    <div class="rp-section">
+        {% if show_balance_refund %}
+            <div class="rp-line">
+                <span class="rp-line-label">Method:</span>
+                <span>Refunded to Balance</span>
+            </div>
+            <div class="rp-line">
+                <span class="rp-line-label">Balance Before:</span>
+                <span>₱{{ balance_before|currency }}</span>
+            </div>
+            <div class="rp-line">
+                <span class="rp-line-label">Balance After:</span>
+                <span>₱{{ balance_after|currency }}</span>
+            </div>
+        {% elif show_cash_refund %}
+            <div class="rp-line">
+                <span class="rp-line-label">Method:</span>
+                <span>Cash Refund</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Reason -->
+    {% if refund_reason %}
+    <div class="rp-sep"></div>
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Reason:</span>
+            <span>{{ refund_reason }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rp-sep"></div>
+
+    <!-- Footer -->
+    <div class="rp-thanks">THANK YOU!</div>
+
+</div>
+<script>
+    // Track if print was initiated
+    let printInitiated = false;
+    
+    // Wrap window.print to track when printing is initiated
+    const originalPrint = window.print;
+    window.print = function() {
+        printInitiated = true;
+        return originalPrint.apply(this, arguments);
+    };
+    
+    // Close window after printing successfully
+    window.addEventListener('afterprint', function() {
+        // Close the window after successful print
+        if (printInitiated) {
+            setTimeout(function() {
+                window.close();
+            }, 300);
+        }
+    });
+    
+    // Auto-print receipt after page loads
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            try {
+                window.print();
+            } catch (e) {
+                console.error('Auto-print failed:', e);
+            }
+        }, 500);
+    });
+
+    // Auto-focus print button for keyboard accessibility (if print dialog is cancelled)
+    window.addEventListener('load', function() {
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {
+            // Mark print as initiated when button is clicked
+            printBtn.addEventListener('click', function() {
+                printInitiated = true;
+            });
+            
+            // Focus after a delay in case print dialog appears
+            setTimeout(function() {
+                printBtn.focus();
+            }, 1000);
+        }
+    });
+    
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+P or Cmd+P to print
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            printInitiated = true;
+            window.print();
+        }
+        // Escape to close
+        if (e.key === 'Escape') {
+            window.close();
+        }
+    });
+</script>
+</body>
+</html>

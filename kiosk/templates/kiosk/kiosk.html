@@ -1,0 +1,3426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genglo Printing Services - Self Checkout Kiosk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root{
+            --brand:#1f7a3a; /* primary green */
+            --accent:#0b5f3a;
+            --brand-light:#2d9f52;
+            --brand-dark:#155d2e;
+            --muted:#6c757d;
+            --muted-light:#9ca3af;
+            --bg:#f0f4f2;
+            --bg-gradient:linear-gradient(135deg, #f0f4f2 0%, #e8f0ec 100%);
+            --panel:#ffffff;
+            --panel-hover:#fafbfc;
+            --radius:16px;
+            --radius-sm:12px;
+            --radius-lg:20px;
+            --shadow-sm:0 2px 8px rgba(16,24,40,0.04);
+            --shadow-md:0 4px 16px rgba(16,24,40,0.08);
+            --shadow-lg:0 8px 32px rgba(16,24,40,0.12);
+            --shadow-xl:0 12px 48px rgba(16,24,40,0.16);
+            --transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; }
+        html,body{height:100%;margin:0;padding:0;}
+        body { 
+            background: var(--bg-gradient); 
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            color:#1a1a1a;
+            font-weight: 400;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Enhanced Header */
+        .kiosk-header { 
+            background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%); 
+            color: white; 
+            padding: 24px 32px; 
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: visible;
+            z-index: 1300 !important; /* Higher than modal (1050) and backdrop (1040) */
+        }
+        /* Ensure Settings button is always above modal backdrop */
+        .modal-backdrop {
+            z-index: 1040 !important; /* Bootstrap default - below header */
+        }
+        .modal {
+            z-index: 1050 !important; /* Bootstrap default - below header */
+        }
+        /* Ensure Settings button area is never blocked */
+        .kiosk-header .admin-menu,
+        .kiosk-header .admin-menu * {
+            pointer-events: auto !important;
+        }
+        /* When modal is shown, ensure header stays on top */
+        body.modal-open .kiosk-header {
+            z-index: 1300 !important;
+        }
+        /* Ensure Settings button is always clickable even when modal is open */
+        body.modal-open .kiosk-header .admin-menu,
+        body.modal-open .kiosk-header .admin-btn,
+        body.modal-open .kiosk-header .dropdown {
+            z-index: 1301 !important;
+            pointer-events: auto !important;
+            position: relative;
+        }
+        .kiosk-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .kiosk-header .container {
+            position: relative;
+            z-index: 1;
+        }
+        .kiosk-header h1{
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .kiosk-header h1 i {
+            font-size: 1.4rem;
+            opacity: 0.95;
+        }
+        .kiosk-header p{
+            opacity: 0.9;
+            margin: 6px 0 0 0;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .kiosk-header .admin-menu { 
+            position: absolute; 
+            top: 24px; 
+            right: 32px; 
+            z-index: 1301 !important; /* Higher than header (1300), modal (1050) and backdrop (1040) */
+            pointer-events: auto !important;
+        }
+        .kiosk-header .dropdown {
+            position: relative;
+            z-index: 1302 !important; /* Higher than admin-menu */
+            pointer-events: auto !important;
+        }
+        .kiosk-header .admin-btn { 
+            background: rgba(255,255,255,0.15); 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.25); 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: var(--radius-sm); 
+            text-decoration: none; 
+            font-size: 0.9rem; 
+            font-weight: 500;
+            transition: var(--transition); 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            cursor: pointer !important; 
+            pointer-events: auto !important; 
+            z-index: 1303 !important; /* Highest - always on top */
+            position: relative;
+            opacity: 1 !important;
+        }
+        .kiosk-header .admin-btn:disabled,
+        .kiosk-header .admin-btn.disabled {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        .kiosk-header .admin-btn:hover, .kiosk-header .admin-btn:focus { 
+            background: rgba(255,255,255,0.25); 
+            border-color: rgba(255,255,255,0.4); 
+            color: white; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .kiosk-header .admin-btn.dropdown-toggle::after { 
+            margin-left: 8px; 
+        }
+        .kiosk-header .dropdown-menu { 
+            background: var(--panel); 
+            border: 1px solid rgba(15,63,38,0.08); 
+            box-shadow: var(--shadow-xl); 
+            border-radius: var(--radius-sm); 
+            margin-top: 8px; 
+            min-width: 180px; 
+            z-index: 1304 !important; /* Highest z-index for dropdown menu - above everything */
+            padding: 8px;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: auto;
+            overflow: visible;
+            max-height: none;
+            pointer-events: auto !important;
+        }
+        .kiosk-header .dropdown-menu.show {
+            display: block !important;
+        }
+        .kiosk-header .dropdown-item { 
+            padding: 12px 16px; 
+            color: #1a1a1a; 
+            transition: var(--transition); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .kiosk-header .dropdown-item:hover { 
+            background: linear-gradient(90deg, rgba(31,122,58,0.08), rgba(31,122,58,0.12)); 
+            color: var(--accent); 
+            transform: translateX(4px);
+        }
+        .kiosk-header .dropdown-item i { 
+            font-size: 1rem; 
+            width: 20px;
+        }
+        @media (max-width: 768px) {
+            .kiosk-header { padding: 20px 24px; }
+            .kiosk-header h1 { font-size: 1.3rem; }
+            .kiosk-header .admin-menu { position: static; margin-top: 16px; }
+            .kiosk-header .admin-btn { font-size: 0.85rem; padding: 8px 16px; }
+        }
+        
+        /* Enhanced Scan Area */
+        .scan-area { 
+            background: var(--panel); 
+            padding: 40px; 
+            border-radius: var(--radius-lg); 
+            margin: 24px 0; 
+            text-align: left; 
+            min-height: 320px; 
+            box-shadow: var(--shadow-md); 
+            border: 1px solid rgba(15,63,38,0.06);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .scan-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--brand), var(--accent));
+        }
+        .scan-area:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        .scan-icon { 
+            font-size: 4rem; 
+            color: var(--brand);
+            background: linear-gradient(135deg, rgba(31,122,58,0.1), rgba(11,95,58,0.15));
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            transition: var(--transition);
+        }
+        .scan-area:hover .scan-icon {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(31,122,58,0.15), rgba(11,95,58,0.2));
+        }
+        .scan-area h3 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #1a1a1a;
+            margin: 16px 0 8px 0;
+        }
+        .scan-area .text-muted {
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        
+        /* Enhanced Form Controls */
+        .form-control, .form-control-lg {
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            font-size: 1rem;
+            font-weight: 400;
+            transition: var(--transition);
+            background: #fafbfc;
+        }
+        .form-control:focus, .form-control-lg:focus {
+            border-color: var(--brand);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(31,122,58,0.1);
+            outline: none;
+        }
+        
+        /* Enhanced Buttons */
+        .btn {
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        .btn-success, .btn-scan {
+            background: linear-gradient(135deg, var(--brand), var(--brand-light));
+            color: white;
+            box-shadow: 0 4px 12px rgba(31,122,58,0.3);
+        }
+        .btn-success:hover, .btn-scan:hover {
+            background: linear-gradient(135deg, var(--brand-light), var(--brand));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(31,122,58,0.4);
+        }
+        .btn-outline-success {
+            border: 2px solid var(--brand);
+            color: var(--brand);
+            background: transparent;
+        }
+        .btn-outline-success:hover {
+            background: var(--brand);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(31,122,58,0.3);
+        }
+        .btn-outline-primary {
+            border: 2px solid #0d6efd;
+            color: #0d6efd;
+            background: transparent;
+        }
+        .btn-outline-primary:hover {
+            background: #0d6efd;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .btn-outline-secondary {
+            border: 2px solid var(--muted);
+            color: var(--muted);
+            background: transparent;
+        }
+        .btn-outline-secondary:hover {
+            background: var(--muted);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220,53,69,0.4);
+        }
+        
+        /* Enhanced Cart Items */
+        .cart-item { 
+            background: var(--panel); 
+            padding: 24px; 
+            margin: 20px 0; 
+            border-radius: var(--radius); 
+            border: 1px solid #e5e7eb; 
+            box-shadow: var(--shadow-sm); 
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .cart-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--brand), var(--accent));
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .cart-item:hover { 
+            box-shadow: var(--shadow-md); 
+            transform: translateY(-4px);
+            border-color: rgba(31,122,58,0.2);
+        }
+        .cart-item:hover::before {
+            opacity: 1;
+        }
+        .cart-item-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            gap: 1rem; 
+            margin-bottom: 12px;
+        }
+        .cart-item-title { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            margin-bottom: 0.5rem; 
+            color: #1a1a1a;
+        }
+        .cart-item-title.low-stock { 
+            color: #dc3545; 
+            font-weight: 700; 
+        }
+        .cart-item-meta { 
+            font-size: 0.875rem; 
+            color: var(--muted); 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            align-items: center; 
+        }
+        .qty-chip { 
+            background: linear-gradient(135deg, rgba(31,122,58,0.12), rgba(11,95,58,0.15)); 
+            color: var(--accent); 
+            padding: 4px 12px; 
+            border-radius: 999px; 
+            font-weight: 600; 
+            font-size: 0.85rem;
+            border: 1px solid rgba(31,122,58,0.2);
+        }
+        .price-tag { 
+            font-size: 1.3rem; 
+            font-weight: 700; 
+            color: var(--accent);
+            background: linear-gradient(135deg, rgba(31,122,58,0.08), rgba(11,95,58,0.12));
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+        }
+        .cart-item-controls { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: space-between; 
+            gap: 16px; 
+            align-items: center; 
+            margin-top: 16px; 
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .cart-quantity-group { 
+            display: flex; 
+            align-items: center; 
+            border: 2px solid #e5e7eb; 
+            border-radius: var(--radius-sm); 
+            overflow: hidden;
+            background: #fafbfc;
+        }
+        .cart-quantity-group .btn { 
+            border: none; 
+            background: transparent; 
+            width: 48px; 
+            height: 48px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.2rem; 
+            color: var(--accent);
+            padding: 0;
+        }
+        .cart-quantity-group .btn:hover {
+            background: rgba(31,122,58,0.1);
+        }
+        .cart-quantity-group input { 
+            width: 80px; 
+            border: 0; 
+            text-align: center; 
+            font-weight: 600; 
+            font-size: 1rem;
+            background: transparent;
+        }
+        .cart-quantity-group input:focus { 
+            box-shadow: none; 
+            outline: none; 
+        }
+        .cart-item .btn-danger { 
+            border-radius: var(--radius-sm); 
+            padding: 12px 20px;
+        }
+        
+        /* Enhanced Summary Box */
+        .summary-box { 
+            background: var(--panel); 
+            padding: 32px; 
+            border-radius: var(--radius-lg); 
+            position: sticky; 
+            top: 24px; 
+            box-shadow: var(--shadow-lg); 
+            border: 1px solid rgba(15,63,38,0.08);
+            transition: var(--transition);
+        }
+        .summary-box:hover {
+            box-shadow: var(--shadow-xl);
+        }
+        .summary-box h4 {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: #1a1a1a;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .summary-box h5 {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+        .summary-box hr {
+            margin: 20px 0;
+            border-color: #e5e7eb;
+        }
+        .summary-box .d-flex {
+            padding: 8px 0;
+        }
+        .summary-box strong {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .lead-muted{color:var(--muted);font-weight: 400;}
+        .small-muted{color:var(--muted);font-size:0.875rem;font-weight: 400;}
+        .cart-empty { 
+            text-align: center; 
+            padding: 80px 40px; 
+            border: 2px dashed #d1d5db; 
+            border-radius: var(--radius-lg); 
+            color: var(--muted); 
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(250,251,252,0.95)); 
+            margin-top: 24px;
+            transition: var(--transition);
+        }
+        .cart-empty:hover {
+            border-color: var(--brand);
+            background: linear-gradient(135deg, rgba(255,255,255,1), rgba(250,251,252,1));
+            box-shadow: var(--shadow-sm);
+        }
+        .cart-empty i {
+            font-size: 5rem;
+            color: var(--muted-light);
+            margin-bottom: 24px;
+            opacity: 0.6;
+        }
+        .cart-empty h5 {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .cart-empty p {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        /* Enhanced Suggestions */
+        #productSuggestions{
+            background: var(--panel); 
+            border: 1px solid #e5e7eb; 
+            border-radius: var(--radius-sm); 
+            box-shadow: var(--shadow-lg);
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        #productSuggestions .list-group-item{
+            padding: 16px 20px;
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        #productSuggestions .list-group-item:last-child {
+            border-bottom: none;
+        }
+        #productSuggestions .list-group-item:hover{
+            background: linear-gradient(90deg, rgba(31,122,58,0.08), rgba(11,95,58,0.12));
+            transform: translateX(4px);
+            border-left: 3px solid var(--brand);
+        }
+        #productSuggestions .list-group-item:active {
+            background: linear-gradient(90deg, rgba(31,122,58,0.12), rgba(11,95,58,0.16));
+        }
+
+        /* Enhanced Member info card */
+        #memberInfo{
+            display: none;
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(234,248,240,0.8), rgba(230,251,242,0.9));
+            border: 2px solid rgba(31,122,58,0.15);
+            box-shadow: var(--shadow-md);
+            margin-top: 20px;
+            transition: var(--transition);
+        }
+        #memberInfo:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        #memberInfo strong{
+            color: var(--accent);
+            font-weight: 600;
+        }
+        #memberInfo .badge{
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            vertical-align: middle;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+        }
+        #memberInfo.cashier-mode{
+            background: linear-gradient(135deg, rgba(255,243,205,0.9), rgba(255,234,167,0.95));
+            border-color: rgba(255,193,7,0.3);
+            box-shadow: 0 6px 20px rgba(255,193,7,0.2);
+        }
+
+        /* Enhanced Modal styling */
+        .modal-content {
+            border-radius: var(--radius-lg);
+            border: none;
+            box-shadow: var(--shadow-xl);
+        }
+        .modal-header {
+            border-bottom: 2px solid #f0f0f0;
+            padding: 24px 32px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .modal-header .modal-title {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: #1a1a1a;
+        }
+        .modal-body {
+            padding: 32px;
+        }
+        .modal-footer {
+            border-top: 2px solid #f0f0f0;
+            padding: 24px 32px;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+        #cashModal .modal-header { 
+            border-bottom: 2px solid rgba(255,255,255,0.1); 
+            background: linear-gradient(135deg, var(--brand), var(--accent));
+            color: white;
+        }
+        #cashModal .modal-header .modal-title,
+        #cashModal .modal-header .btn-close {
+            color: white;
+        }
+        #cashModal #cashSubmitBtn:hover { 
+            background: var(--accent) !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(31,122,58,0.4); 
+            transition: var(--transition); 
+        }
+        #cashModal #cashInput { 
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        #cashModal #cashInput:focus { 
+            border-color: var(--brand); 
+            box-shadow: 0 0 0 4px rgba(31,122,58,0.1); 
+        }
+        #cashModal .input-group-text { 
+            font-weight: 600;
+            background: #f8f9fa;
+            border: 2px solid #e5e7eb;
+            border-right: none;
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+        }
+        
+        /* Custom Logout Confirmation Modal */
+        #logoutConfirmModal {
+            z-index: 9999 !important;
+        }
+        #logoutConfirmModal .modal-dialog {
+            max-width: 480px;
+            margin: 10vh auto;
+            display: flex;
+            align-items: center;
+            min-height: calc(100vh - 20vh);
+        }
+        #logoutConfirmModal .modal-content {
+            border-radius: var(--radius-lg);
+            border: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        #logoutConfirmModal .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9998 !important;
+        }
+        #logoutConfirmModal .modal-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        #logoutConfirmModal .modal-header .modal-title {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+        }
+        #logoutConfirmModal .modal-header .modal-title i {
+            color: #ff9800;
+            font-size: 1.8rem;
+        }
+        #logoutConfirmModal .modal-body {
+            padding: 32px;
+            text-align: center;
+        }
+        #logoutConfirmModal .modal-body .warning-icon {
+            font-size: 4rem;
+            color: #ff9800;
+            margin-bottom: 20px;
+            display: block;
+        }
+        #logoutConfirmModal .modal-body p {
+            font-size: 1.1rem;
+            color: #495057;
+            line-height: 1.6;
+            margin: 0;
+            font-weight: 400;
+        }
+        #logoutConfirmModal .modal-footer {
+            border-top: 2px solid #e9ecef;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            background: #f8f9fa;
+        }
+        #logoutConfirmModal .modal-footer .btn {
+            min-width: 120px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+        #logoutConfirmModal .modal-footer .btn-cancel {
+            background: #6c757d;
+            border: 2px solid #6c757d;
+            color: white;
+        }
+        #logoutConfirmModal .modal-footer .btn-cancel:hover {
+            background: #5a6268;
+            border-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+        #logoutConfirmModal .modal-footer .btn-confirm {
+            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+            border: 2px solid #0d6efd;
+            color: white;
+        }
+        #logoutConfirmModal .modal-footer .btn-confirm:hover {
+            background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+            border-color: #0a58ca;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+        
+        /* Enhanced Toast */
+        .toast {
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-xl);
+            border: none;
+            min-width: 300px;
+            max-width: 500px;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        .toast-body {
+            font-weight: 500;
+            padding: 16px 20px;
+            font-size: 1rem;
+        }
+        /* Toast container - ensure it's always visible above modals */
+        .position-fixed.top-0.end-0 {
+            z-index: 9999 !important;
+            pointer-events: none;
+        }
+        .position-fixed.top-0.end-0 .toast {
+            pointer-events: auto;
+        }
+        
+        /* Enhanced Payment Buttons */
+        .btn-group-vertical {
+            gap: 12px;
+        }
+        .btn-group-vertical .btn {
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            text-align: left;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-group-vertical .btn i {
+            font-size: 1.2rem;
+            margin-right: 12px;
+        }
+        .btn-group-vertical .btn::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: currentColor;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .btn-group-vertical .btn:hover::before {
+            opacity: 1;
+        }
+        
+        /* Enhanced Container */
+        .container-fluid {
+            padding-left: 32px;
+            padding-right: 32px;
+        }
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+        
+        /* Loading States */
+        .btn.loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Focus Visible */
+        *:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 2px;
+        }
+        
+        /* Print Styles Enhancement */
+        @media print {
+            body {
+                background: white;
+            }
+        }
+
+        /* Receipt tweaks (keep previous print rules) */
+        /* Print: show only receipt when printing */
+        @media print {
+            body.print-receipt-only * {
+                visibility: hidden !important;
+            }
+            body.print-receipt-only #receiptModal,
+            body.print-receipt-only #receiptModal * {
+                visibility: visible !important;
+            }
+            body.print-receipt-only #receiptModal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+            }
+            body.print-receipt-only #receiptModal .modal-dialog {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            body.print-receipt-only .modal-backdrop,
+            body.print-receipt-only .position-fixed,
+            body.print-receipt-only #receiptModal .modal-footer,
+            body.print-receipt-only #receiptModal .btn-close {
+                display: none !important;
+            }
+            body.print-receipt-only #receiptContent {
+                padding: 0 !important;
+            }
+            body.print-receipt-only #receiptModal .modal-content {
+                box-shadow: none !important;
+                border: 0 !important;
+                page-break-inside: avoid;
+            }
+            /* Hide display version, show print version when printing */
+            body.print-receipt-only .receipt-display {
+                display: none !important;
+            }
+            body.print-receipt-only .receipt-paper {
+                display: block !important;
+                visibility: visible !important;
+            }
+        }
+
+        /* Receipt display (on-screen) - presentable version */
+        .receipt-display { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            border-radius: 16px; 
+            padding: 32px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .receipt-display .rd-header { 
+            text-align: center; 
+            padding-bottom: 24px; 
+            border-bottom: 2px solid #e9ecef; 
+            margin-bottom: 24px; 
+        }
+        .receipt-display .rd-title { 
+            font-weight: 700; 
+            font-size: 1.0rem; 
+            color: var(--brand); 
+            margin-bottom: 4px; 
+            letter-spacing: 0.5px;
+        }
+        .receipt-display .rd-subtitle { 
+            font-size: 0.75rem; 
+            color: var(--muted); 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .receipt-display .rd-info { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            margin-bottom: 24px; 
+            padding: 16px; 
+            background: #f8f9fa; 
+            border-radius: 10px; 
+        }
+        .receipt-display .rd-info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75rem; 
+        }
+        .receipt-display .rd-info-label { 
+            color: var(--muted); 
+            font-weight: 700; 
+            font-size: 0.8rem;
+        }
+        .receipt-display .rd-info-value { 
+            color: #222; 
+            font-weight: 600; 
+        }
+        .receipt-display .rd-section { 
+            margin: 24px 0; 
+        }
+        .receipt-display .rd-section-title { 
+            font-weight: 700; 
+            font-size: 0.8rem; 
+            color: var(--accent); 
+            margin-bottom: 16px; 
+            padding-bottom: 8px; 
+            border-bottom: 2px solid #e9ecef; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        .receipt-display .rd-items { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        .receipt-display .rd-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+        .receipt-display .rd-item:last-child { 
+            border-bottom: none; 
+        }
+        .receipt-display .rd-item-name { 
+            flex: 1; 
+            font-weight: 500; 
+            color: #222; 
+            font-size: 0.75rem;
+        }
+        .receipt-display .rd-item-qty { 
+            color: var(--muted); 
+            font-size: 0.7rem; 
+            margin-left: 8px; 
+        }
+        .receipt-display .rd-item-price { 
+            font-weight: 600; 
+            color: var(--accent); 
+            font-size: 0.75rem; 
+        }
+        .receipt-display .rd-line { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 8px 0; 
+            font-size: 0.75rem; 
+        }
+        .receipt-display .rd-line-label { 
+            color: var(--muted); 
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        .receipt-display .rd-line-value { 
+            font-weight: 600; 
+            color: #222; 
+        }
+        .receipt-display .rd-separator { 
+            border-top: 2px dashed #dee2e6; 
+            margin: 16px 0; 
+        }
+        .receipt-display .rd-total { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+            border-radius: 10px; 
+            margin-top: 16px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            color: var(--accent); 
+        }
+        .receipt-display .rd-payment-section { 
+            background: #f8f9fa; 
+            padding: 16px; 
+            border-radius: 10px; 
+            margin-top: 16px; 
+        }
+        .receipt-display .rd-payment-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 6px 0; 
+            font-size: 0.75rem; 
+        }
+        .receipt-display .rd-member-summary { 
+            background: #eaf8f0; 
+            padding: 16px; 
+            border-radius: 10px; 
+            margin-top: 16px; 
+            border: 1px solid rgba(31,122,58,0.1); 
+        }
+        .receipt-display .rd-member-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 6px 0; 
+            font-size: 0.75rem; 
+        }
+        .receipt-display .rd-thanks { 
+            text-align: center; 
+            margin-top: 24px; 
+            padding-top: 24px; 
+            border-top: 2px solid #e9ecef; 
+            font-weight: 600; 
+            color: var(--brand); 
+            font-size: 0.75rem; 
+        }
+
+        /* Responsive adjustments for receipt display */
+        @media (max-width: 768px) {
+            .receipt-display {
+                padding: 20px;
+                border-radius: 12px;
+            }
+            .receipt-display .rd-title {
+                font-size: 0.95rem;
+            }
+            .receipt-display .rd-info-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .receipt-display .rd-item {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .receipt-display .rd-item-price {
+                text-align: right;
+            }
+        }
+
+        /* Modal body styling for receipt */
+        #receiptModal .modal-body {
+            padding: 24px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Receipt layout (print version) - thermal printer optimized */
+        .receipt-paper { 
+            font-family: "Courier New", monospace; 
+            font-size: 11pt; 
+            line-height: 1.4; 
+            width: 56mm; 
+            max-width: 56mm; 
+            margin: 0 auto; 
+            color: #000 !important;
+            padding: 2mm;
+        }
+        .receipt-paper * { color: #000 !important; }
+        .receipt-paper .rp-center { text-align: center; }
+        .receipt-paper .rp-title { 
+            font-weight: 700; 
+            font-size: 15pt; 
+            margin: 2mm 0 1mm; 
+            color: #000 !important;
+            text-align: center;
+        }
+        .receipt-paper .rp-sub { 
+            font-size: 11pt; 
+            margin-bottom: 3mm; 
+            color: #000 !important;
+            text-align: center;
+        }
+        .receipt-paper .rp-line { 
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            width: 100%;
+            margin: 1.5mm 0;
+            color: #000 !important;
+            font-size: 11pt;
+        }
+        .receipt-paper .rp-line span:first-child { 
+            flex: 1;
+            text-align: left;
+            padding-right: 2mm;
+            word-wrap: break-word;
+            color: #000 !important;
+        }
+        .receipt-paper .rp-line span:last-child { 
+            flex-shrink: 0;
+            text-align: right;
+            white-space: nowrap;
+            color: #000 !important;
+        }
+        .receipt-paper .rp-sep { 
+            border-top: 1px dashed #000; 
+            margin: 3mm 0;
+            width: 100%;
+        }
+        .receipt-paper .rp-section-title { 
+            margin: 2mm 0 1mm 0; 
+            font-weight: 700;
+            font-size: 12pt;
+            color: #000 !important;
+            text-transform: uppercase;
+        }
+        .receipt-paper .rp-items { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0 0 2mm 0; 
+        }
+        .receipt-paper .rp-items li { 
+            margin: 1.5mm 0; 
+            font-size: 11pt; 
+            color: #000 !important;
+        }
+        .receipt-paper .rp-subline { 
+            font-size: 9pt; 
+            color: #000 !important;
+            line-height: 1.3;
+        }
+        .receipt-paper .rp-total { 
+            font-weight: 700; 
+            font-size: 11pt; 
+            color: #c00 !important;
+            margin-top: 2mm;
+        }
+        .receipt-paper .rp-box { 
+            border: 1px dashed #000; 
+            padding: 2mm; 
+            margin: 2mm 0; 
+            color: #000 !important; 
+        }
+        .receipt-paper .rp-thanks { 
+            margin-top: 3mm; 
+            font-weight: 700;
+            font-size: 11pt;
+            color: #000 !important;
+            text-align: center;
+        }
+        .receipt-paper .copy-label {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 3mm 0;
+            padding: 2mm 0;
+            border-top: 2px dashed #000;
+            border-bottom: 2px dashed #000;
+            color: #000 !important;
+        }
+        .receipt-paper .copy-separator {
+            text-align: center;
+            margin: 5mm 0;
+            font-size: 9pt;
+            letter-spacing: 2px;
+            border-top: 1px dashed #000;
+            padding-top: 3mm;
+            color: #000 !important;
+        }
+        .receipt-display .copy-label {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 12px 0;
+            border-top: 2px dashed #dee2e6;
+            border-bottom: 2px dashed #dee2e6;
+            color: var(--accent);
+        }
+        .receipt-display .copy-separator {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 9pt;
+            letter-spacing: 2px;
+            border-top: 1px dashed #dee2e6;
+            padding-top: 20px;
+            color: var(--muted);
+        }
+
+        /* Print tuning for thermal paper */
+        @page { size: 58mm auto; margin: 2mm; }
+        @media print {
+            body.print-receipt-only #receiptModal .modal-header { display: none !important; }
+            body.print-receipt-only #receiptModal .modal-body { padding: 0 !important; }
+            body.print-receipt-only #receiptModal .modal-body > .text-center { display: none !important; }
+            body.print-receipt-only #receiptPaper { width: 56mm !important; max-width: 56mm !important; margin: 0 auto !important; }
+            body.print-receipt-only #receiptPaper .rp-subline { color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="kiosk-header" style="position: relative;">
+        <div class="container">
+            <h1><i class="bi bi-shop"></i> Genglo Printing Services - Self Checkout</h1>
+            <p class="mb-0">Quick, Easy, and Convenient Shopping</p>
+        </div>
+        <div class="admin-menu">
+            <div class="dropdown">
+                <button class="admin-btn dropdown-toggle" type="button" id="settingsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-gear"></i> Settings
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="settingsDropdown">
+                    <li>
+                        <a class="dropdown-item" href="javascript:void(0);" onclick="handleLogout(event); return false;">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container for inline messages -->
+    <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 9999 !important; pointer-events: none;">
+        <div id="kioskToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true" style="display:none; pointer-events: auto; opacity: 1 !important; visibility: visible !important;">
+            <div class="d-flex">
+                <div id="kioskToastBody" class="toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" onclick="const toast = bootstrap.Toast.getInstance(document.getElementById('kioskToast')); if(toast) toast.hide();"></button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="scan-area">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="bi bi-upc-scan scan-icon"></i>
+                        <div class="ms-3">
+                            <h3 class="mb-1">Scan Your Item</h3>
+                            <p class="text-muted mb-0">Enter barcode or scan with scanner</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4" style="position:relative;">
+                        <input type="text" id="barcodeInput" class="form-control form-control-lg" 
+                               placeholder="Enter barcode or product name (type to search)..." autofocus autocomplete="off">
+                        <div id="productSuggestions" class="list-group" style="position:absolute;z-index:1050;left:0;right:0;display:none;max-height:260px;overflow:auto;margin-top:6px;"></div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-success btn-scan" onclick="onScanButtonClick()">
+                                <i class="bi bi-upc-scan"></i> Scan / Add
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="clearSuggestions()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4" id="rfidWrapper" style="display:none;">
+                        <label for="rfidInput" class="form-label visually-hidden">Scan RFID card</label>
+                        <input type="text" id="rfidInput" class="form-control" placeholder="Scan RFID card..." autocomplete="off" aria-label="Scan RFID card">
+                        <!-- Scan button removed: RFID readers (keyboard-wedge) will input the tag and this field will auto-submit via JS -->
+                    </div>
+                    
+                    <div id="memberInfo" class="mt-3" style="display:none;"></div>
+                </div>
+
+                <div id="cartItems"></div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="summary-box">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="bi bi-receipt-cutoff me-2" style="font-size: 1.5rem; color: var(--brand);"></i>
+                        <h4 class="mb-0">Order Summary</h4>
+                    </div>
+                    <div id="summaryDetails" style="display:none;">
+                        <hr class="my-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">VATable Sale:</span>
+                            <strong id="subtotal" style="font-size: 1.1rem;">₱0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">VAT (12%):</span>
+                            <strong id="vat" style="font-size: 1.1rem;">₱0.00</strong>
+                        </div>
+                        <hr class="my-3">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">Total:</h5>
+                            <h5 id="total" class="mb-0" style="color: var(--accent);">₱0.00</h5>
+                        </div>
+                    </div>
+                    
+                    <div id="paymentOptions" style="display:none;">
+                        <h6 class="mb-3" style="font-weight: 600; color: #1a1a1a;">
+                            <i class="bi bi-credit-card me-2"></i>Payment Method
+                        </h6>
+                        <div class="btn-group-vertical w-100 mb-3">
+                            <button class="btn btn-outline-success" onclick="preparePayment('debit')">
+                                <i class="bi bi-wallet2"></i> Debit (Member Account)
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="processPayment('cash')">
+                                <i class="bi bi-cash"></i> Cash
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="clearCartBtn" class="btn btn-danger w-100" onclick="clearCart()" style="display:none;">
+                        <i class="bi bi-x-circle"></i> Cancel / Clear Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Transaction Complete!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        <h3>Thank You for Your Purchase!</h3>
+                    </div>
+                    <div id="receiptContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="printReceipt()">
+                        <i class="bi bi-printer"></i> Print Receipt
+                    </button>
+                    <button class="btn btn-success" data-bs-dismiss="modal" onclick="newTransaction()">
+                        New Transaction
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN modal -->
+    <div class="modal fade" id="pinModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enter 4-digit PIN</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="form-control form-control-lg text-center" maxlength="4" placeholder="••••" autofocus>
+                    <div id="pinError" class="text-danger mt-2" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="pinSubmitBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash input modal -->
+    <div class="modal fade" id="cashModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background: linear-gradient(90deg, var(--brand), var(--accent));">
+                    <h5 class="modal-title"><i class="bi bi-cash"></i> Cash Payment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="totalAmountDisplay" class="form-label fw-bold" style="color: var(--accent);">Total Amount:</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: rgba(31,122,58,0.1); color: var(--accent); border-color: rgba(31,122,58,0.2);">₱</span>
+                            <input type="text" id="totalAmountDisplay" class="form-control form-control-lg text-end fw-bold" readonly value="0.00" style="font-size: 1.5rem; color: var(--accent); border-color: rgba(31,122,58,0.2);">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cashInput" class="form-label fw-bold" style="color: var(--accent);">Cash:</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: rgba(31,122,58,0.1); color: var(--accent); border-color: rgba(31,122,58,0.2);">₱</span>
+                            <input type="number" id="cashInput" class="form-control form-control-lg text-end" step="0.01" min="0" placeholder="0.00" autofocus style="border-color: rgba(31,122,58,0.2);">
+                        </div>
+                        <div id="cashError" class="text-danger mt-2" style="display:none;"></div>
+                    </div>
+                    <div id="changeDisplay" class="alert" style="display:none; background: linear-gradient(180deg, #eaf8f0, #e6fbf2); border: 1px solid rgba(31,122,58,0.2); border-radius: 10px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="color: var(--accent);">Change:</span>
+                            <span id="changeAmount" class="fw-bold" style="font-size: 1.3rem; color: var(--accent);">₱0.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn" id="cashSubmitBtn" style="background: var(--brand); color: white; border: none;">Confirm Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    let cart = [];
+    let currentMember = null;
+    // Values injected from Django settings.
+    const VAT_RATE = parseFloat('{{ VAT_RATE|default:0.12|floatformat:4 }}');
+    const VAT_INCLUSIVE = {{ VAT_INCLUSIVE|yesno:"true,false"|default:"false" }};
+    // Low stock threshold - products with stock <= this value will be highlighted in red
+    const LOW_STOCK_THRESHOLD = 5;
+    // Auto-submit PIN when 4 digits are entered
+    const AUTO_SUBMIT_PIN = true;
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+        // Always auto-print receipts for every completed transaction
+        function isAutoPrintEnabled() {
+            return true;
+        }
+
+        function scanProduct() {
+            const barcode = document.getElementById('barcodeInput').value;
+            if (!barcode) return;
+
+            fetch('/api/scan-product/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({barcode: barcode})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // include server-reported stock on the product object
+                    addToCart(data.product);
+                    document.getElementById('barcodeInput').value = '';
+                } else {
+                    // Show the actual error message from server (e.g., out of stock, etc.)
+                    showMessage(data.error || 'Product not found!', 'danger');
+                }
+            });
+        }
+
+        function scanRFID() {
+            const rfid = document.getElementById('rfidInput').value;
+            if (!rfid) return;
+
+            fetch('/api/scan-rfid/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({rfid: rfid})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentMember = data.member;
+                    const isCashier = data.member.role === 'cashier' || data.member.role === 'admin';
+                    const roleBadge = isCashier ? '<span class="badge bg-warning text-dark ms-2"><i class="bi bi-shield-check"></i> Cashier</span>' : '';
+                    const memberInfoEl = document.getElementById('memberInfo');
+                    memberInfoEl.innerHTML = `
+                        <strong>Member:</strong> ${data.member.name}${roleBadge}<br>
+                        <strong>Balance:</strong> ₱${parseFloat(data.member.balance).toFixed(2)}<br>
+                        ${isCashier ? '<br><small class="text-success"><i class="bi bi-lightning-fill"></i> Direct access enabled - PIN not required</small>' : ''}
+                    `;
+                    // Apply cashier styling
+                    if (isCashier) {
+                        memberInfoEl.classList.add('cashier-mode');
+                    } else {
+                        memberInfoEl.classList.remove('cashier-mode');
+                    }
+                    memberInfoEl.style.display = 'block';
+                    document.getElementById('rfidInput').value = '';
+                    // Notify any waiting code that a member was scanned
+                    try {
+                        document.dispatchEvent(new CustomEvent('memberScanned', { detail: data.member }));
+                    } catch (e) { /* ignore in older browsers */ }
+                } else {
+                    showMessage('Member not found!', 'danger');
+                }
+            });
+        }
+
+        // --- Product name search / suggestions ---
+        let _searchTimer = null;
+        const SEARCH_DEBOUNCE_MS = 300;
+
+        // Perform product name search (GET). Expects JSON { results: [ {id,name,price,barcode,stock,...}, ... ] }
+        async function searchProducts(query) {
+            if (!query || query.trim().length < 2) return [];
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 6000);
+                const res = await fetch('/api/search-products/?q=' + encodeURIComponent(query), { signal: controller.signal });
+                clearTimeout(timeout);
+                if (!res.ok) return [];
+                const data = await res.json();
+                return data.results || data || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function renderSuggestions(items) {
+            const el = document.getElementById('productSuggestions');
+            if (!el) return;
+            if (!items || items.length === 0) {
+                el.style.display = 'none';
+                el.innerHTML = '';
+                return;
+            }
+            el.innerHTML = items.slice(0, 10).map(p => `
+                <button type="button" class="list-group-item list-group-item-action" data-product-id="${p.id}" data-product='${escapeHtml(JSON.stringify(p))}'>
+                    <div class="d-flex justify-content-between">
+                        <div><strong>${escapeHtml(p.name)}</strong><br><small class="text-muted">${escapeHtml(p.barcode || '')}</small></div>
+                        <div class="text-end">₱${parseFloat(p.price||0).toFixed(2)}<br><small class="text-muted">Stock: ${p.stock||p.stock_quantity||0}</small></div>
+                    </div>
+                </button>
+            `).join('');
+            el.style.display = 'block';
+
+            // bind clicks
+            el.querySelectorAll('button.list-group-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const raw = this.getAttribute('data-product');
+                    try {
+                        const p = JSON.parse(unescapeHtml(raw));
+                        addToCart(p);
+                        clearSuggestions();
+                        const input = document.getElementById('barcodeInput'); if (input) input.value = '';
+                    } catch (e) { /* ignore */ }
+                });
+            });
+        }
+
+        function clearSuggestions() {
+            const el = document.getElementById('productSuggestions');
+            if (!el) return;
+            el.style.display = 'none';
+            el.innerHTML = '';
+        }
+
+        function escapeHtml(s) { return (s+'').replace(/&/g,'\\u0026').replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/'/g,'\\u0027').replace(/"/g,'\\u0022'); }
+        function unescapeHtml(s) { return (s+'').replace(/\\u0026/g,'&').replace(/\\u003c/g,'<').replace(/\\u003e/g,'>').replace(/\\u0027/g,"'").replace(/\\u0022/g,'"'); }
+
+        const barcodeInputEl = document.getElementById('barcodeInput');
+        if (barcodeInputEl) {
+            barcodeInputEl.addEventListener('input', function(e) {
+                const v = this.value;
+                // debounce
+                if (_searchTimer) clearTimeout(_searchTimer);
+                _searchTimer = setTimeout(async () => {
+                    const trimmed = v.trim();
+                    // If input looks numeric and <=13 chars, prefer barcode path (do nothing)
+                    const onlyDigits = /^\d+$/.test(trimmed);
+                    if (onlyDigits && trimmed.length <= 13) {
+                        // hide suggestions for barcode-like input
+                        clearSuggestions();
+                        return;
+                    }
+                    // Only search if query is meaningful (length >= 2)
+                    if (trimmed.length >= 2) {
+                        const results = await searchProducts(trimmed);
+                        renderSuggestions(results);
+                        // Show alert if no products found
+                        if (!results || results.length === 0) {
+                            showMessage('No product found', 'warning');
+                        }
+                    } else {
+                        clearSuggestions();
+                    }
+                }, SEARCH_DEBOUNCE_MS);
+            });
+
+            barcodeInputEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent default form submission behavior
+                    const sugEl = document.getElementById('productSuggestions');
+                    if (sugEl && sugEl.children.length > 0) {
+                        // simulate click on first suggestion
+                        const first = sugEl.children[0];
+                        if (first) { first.click(); return; }
+                    }
+                    // fallback to barcode scan behavior
+                    onScanButtonClick();
+                }
+                if (e.key === 'Escape') { clearSuggestions(); }
+            });
+        }
+
+        function onScanButtonClick() {
+            const v = (document.getElementById('barcodeInput') || {}).value;
+            if (!v) return;
+            const trimmed = v.trim();
+            // If input looks like a barcode (all digits, reasonable length), call scanProduct
+            if (/^\d+$/.test(trimmed)) {
+                document.getElementById('barcodeInput').value = trimmed;
+                scanProduct();
+                return;
+            }
+            // Otherwise try to search and if there is at least one suggestion, add the first
+            (async function(){
+                const results = await searchProducts(trimmed);
+                if (results && results.length > 0) {
+                    addToCart(results[0]);
+                    document.getElementById('barcodeInput').value = '';
+                    clearSuggestions();
+                } else {
+                    showMessage('No matching products found', 'warning');
+                }
+            })();
+        }
+
+        function addToCart(product) {
+            const existing = cart.find(item => item.id === product.id);
+            const available = parseInt(product.stock || product.stock_quantity || 0, 10);
+            if (existing) {
+                // Prevent adding more than available stock
+                if (existing.quantity + 1 > available) {
+                    showMessage(`Cannot add more. Only ${available - existing.quantity} left in stock.`, 'warning');
+                    return;
+                }
+                existing.quantity++;
+            } else {
+                if (available <= 0) {
+                    showMessage('Product is out of stock', 'danger');
+                    return;
+                }
+                // include available stock on the cart item for UI
+                cart.push({...product, quantity: 1, available_stock: available});
+            }
+            updateCart();
+            // Ensure Settings button is always clickable when products are added
+            ensureSettingsAccessible();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        function updateCart() {
+            const container = document.getElementById('cartItems');
+            if (!container) return;
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty">
+                        <i class="bi bi-bag-check"></i>
+                        <h5 class="mt-4 mb-2" style="font-weight: 600; color: #1a1a1a;">Your Cart is Empty</h5>
+                        <p class="mb-0" style="font-size: 1rem;">Scan a product or search by name to get started</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = cart.map(item => {
+                    const available = typeof item.available_stock !== 'undefined' ? item.available_stock : (item.stock || item.stock_quantity || 0);
+                    const remaining = Math.max((available || 0) - item.quantity, 0);
+                    const lineTotal = (parseFloat(item.price) * item.quantity).toFixed(2);
+                    const isLowStock = remaining <= LOW_STOCK_THRESHOLD;
+                    const lowStockClass = isLowStock ? ' low-stock' : '';
+                    return `
+                        <div class="cart-item">
+                            <div class="cart-item-header">
+                                <div>
+                                    <div class="cart-item-title${lowStockClass}">${item.name}</div>
+                                    <div class="cart-item-meta">
+                                        <span>${item.barcode || 'No barcode'}</span>
+                                        <span class="qty-chip">Remaining: ${remaining}</span>
+                                    </div>
+                                </div>
+                                <div class="price-tag">₱${lineTotal}</div>
+                            </div>
+                            <div class="cart-item-controls">
+                                <div class="cart-quantity-group">
+                                    <button class="btn" type="button" onclick="changeQuantity(${item.id}, -1)">-</button>
+                                    <input type="number" min="1" class="form-control" value="${item.quantity}" oninput="onQuantityInput(${item.id}, this)" onblur="setQuantity(${item.id}, this.value)">
+                                    <button class="btn" type="button" onclick="changeQuantity(${item.id}, 1)">+</button>
+                                </div>
+                                <button class="btn btn-danger" onclick="removeFromCart(${item.id})">
+                                    <i class="bi bi-trash me-1"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+            let vat = 0;
+            let total = 0;
+            let vatable = 0;
+
+            if (VAT_INCLUSIVE) {
+                // Extract VAT from subtotal: VAT = subtotal - (subtotal / (1 + rate))
+                vat = subtotal - (subtotal / (1 + VAT_RATE));
+                vatable = subtotal - vat; // when inclusive, vatable_sale = subtotal - vat
+                total = subtotal;
+            } else {
+                // Per your formula:
+                // vat_total = product * vat_rate
+                // vatable_sale = product - vat_total
+                // total = vat_total + vatable_sale
+                vat = subtotal * VAT_RATE;
+                vatable = subtotal - vat;
+                total = vat + vatable; // equals subtotal, but kept per formula
+            }
+
+            // Normalize available_stock for display: if not present, try to use server 'stock' value
+            cart = cart.map(item => {
+                const available = typeof item.available_stock !== 'undefined' ? item.available_stock : (item.stock || item.stock_quantity || 0);
+                return {...item, available_stock: available};
+            });
+
+            document.getElementById('subtotal').textContent = `₱${vatable.toFixed(2)}`;
+            document.getElementById('vat').textContent = `₱${vat.toFixed(2)}`;
+            document.getElementById('total').textContent = `₱${total.toFixed(2)}`;
+
+            document.getElementById('paymentOptions').style.display = cart.length > 0 ? 'block' : 'none';
+            
+            // Hide/show summary details and Cancel/Clear button based on cart state
+            const summaryDetails = document.getElementById('summaryDetails');
+            if (summaryDetails) {
+                summaryDetails.style.display = cart.length > 0 ? 'block' : 'none';
+            }
+            
+            const clearCartBtn = document.getElementById('clearCartBtn');
+            if (clearCartBtn) {
+                clearCartBtn.style.display = cart.length > 0 ? 'block' : 'none';
+            }
+            
+            // Ensure Settings button remains accessible regardless of cart state
+            ensureSettingsAccessible();
+            
+            // Also ensure it's clickable when cart has products
+            if (cart.length > 0) {
+                ensureSettingsAccessible();
+            }
+        }
+
+        function processPayment(method, pin, cashAmount) {
+            if (cart.length === 0) {
+                showMessage('Cart is empty!', 'warning');
+                return;
+            }
+
+            // For cash payments, cash amount is REQUIRED - show modal if missing
+            if (method === 'cash') {
+                if (cashAmount === null || cashAmount === undefined || isNaN(parseFloat(cashAmount)) || parseFloat(cashAmount) <= 0) {
+                    // Cash amount is missing - show cash modal BEFORE processing
+                    showMessage('Please enter the cash amount', 'info');
+                    showCashModal().then(amount => {
+                        if (amount !== null && amount !== undefined && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0) {
+                            // Recursively call with the cash amount
+                            processPayment(method, pin, amount);
+                        } else {
+                            showMessage('Cash payment cancelled. Transaction not processed.', 'warning');
+                        }
+                    });
+                    return; // Stop here - don't process payment without cash amount
+                }
+                
+                // Validate cash amount is sufficient
+                const totalEl = document.getElementById('total');
+                let finalTotal = 0;
+                if (totalEl) {
+                    const totalText = totalEl.textContent.replace(/[₱,\s]/g, '');
+                    finalTotal = parseFloat(totalText) || 0;
+                }
+                const cashValue = parseFloat(cashAmount);
+                if (cashValue < finalTotal) {
+                    showMessage(`Insufficient cash. Total: ₱${finalTotal.toFixed(2)}, Received: ₱${cashValue.toFixed(2)}`, 'danger');
+                    // Show cash modal again
+                    showCashModal().then(amount => {
+                        if (amount !== null && amount !== undefined && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0) {
+                            processPayment(method, pin, amount);
+                        }
+                    });
+                    return;
+                }
+            }
+
+            const items = cart.map(item => ({product_id: item.id, quantity: item.quantity}));
+
+            const payload = {
+                member_id: currentMember ? currentMember.id : null,
+                items: items,
+                payment_method: method
+            };
+
+            if (pin) payload.pin = pin;
+            if (method === 'cash' && cashAmount !== null && cashAmount !== undefined) {
+                payload.cash_amount = parseFloat(cashAmount);
+            }
+
+            // Show loading state
+            showMessage('Processing payment...', 'info');
+
+            fetch('/api/process-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Payment successful - show receipt
+                    showReceipt(data.transaction);
+                } else {
+                    showMessage('Payment failed: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                showMessage('Payment error: ' + error.message, 'danger');
+            });
+        }
+
+        function sendPaymentRequest(payload) {
+            fetch('/api/process-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showReceipt(data.transaction);
+                } else {
+                    showMessage('Payment failed: ' + data.error, 'danger');
+                }
+            });
+        }
+
+        function preparePayment(method) {
+            // If debit requires a member; if none attached, prompt to scan card first.
+            if (method === 'debit') {
+                if (!currentMember) {
+                    // Prompt user to scan a member card by revealing the RFID input
+                    showRFIDInput();
+                    // Provide a lightweight instruction
+                    showMessage('Please scan member card now. The RFID input is shown and will auto-detect the card.', 'info');
+
+                    // Wait for memberScanned event for up to 12 seconds, otherwise hide the input and abort
+                    const waitForMember = new Promise((resolve) => {
+                        const onScanned = (e) => { resolve(e.detail); };
+                        document.addEventListener('memberScanned', onScanned, { once: true });
+                        setTimeout(() => { document.removeEventListener('memberScanned', onScanned); resolve(null); }, 12000);
+                    });
+                    waitForMember.then(member => {
+                        hideRFIDInput();
+                        if (member) {
+                            // Check if member is cashier/admin - skip PIN for direct access
+                            const isCashier = member.role === 'cashier' || member.role === 'admin';
+                            if (isCashier) {
+                                // Cashier direct access - no PIN required
+                                processPayment(method, null);
+                            } else {
+                                // Regular member - require PIN
+                                showPinModal().then(pin => { if (pin) processPayment(method, pin); });
+                            }
+                        } else {
+                            showMessage('Member not scanned. Payment cancelled.', 'warning');
+                        }
+                    });
+                    return;
+                }
+                // member exists, check if cashier for direct access
+                const isCashier = currentMember.role === 'cashier' || currentMember.role === 'admin';
+                if (isCashier) {
+                    // Cashier direct access - no PIN required
+                    processPayment(method, null);
+                } else {
+                    // Regular member - ask for PIN
+                    showPinModal().then(pin => {
+                        if (!pin) return; // cancelled
+                        processPayment(method, pin);
+                    });
+                }
+                return;
+            }
+            // cash payment - ALWAYS show cash input modal FIRST before processing
+            if (method === 'cash') {
+                showCashModal().then(cashAmount => {
+                    if (cashAmount !== null && cashAmount !== undefined && !isNaN(parseFloat(cashAmount)) && parseFloat(cashAmount) > 0) {
+                        // Only proceed if valid cash amount was entered
+                        processPayment(method, null, cashAmount);
+                    } else {
+                        // User cancelled or entered invalid amount
+                        showMessage('Cash payment cancelled. Please enter a valid cash amount to proceed.', 'warning');
+                    }
+                });
+                return;
+            }
+            // other methods (debit already handled above)
+            processPayment(method, null);
+        }
+
+        function showPinModal() {
+            return new Promise((resolve) => {
+                const pinInput = document.getElementById('pinInput');
+                const pinError = document.getElementById('pinError');
+                pinInput.value = '';
+                pinError.style.display = 'none';
+                const pinModalEl = document.getElementById('pinModal');
+                const pinModal = new bootstrap.Modal(pinModalEl);
+                pinModal.show();
+
+                const submitBtn = document.getElementById('pinSubmitBtn');
+
+                function cleanup() {
+                    submitBtn.removeEventListener('click', onSubmit);
+                    pinInput.removeEventListener('keypress', onKey);
+                    if (AUTO_SUBMIT_PIN) {
+                        pinInput.removeEventListener('input', onInput);
+                    }
+                    pinModalEl.removeEventListener('hidden.bs.modal', onCancel);
+                }
+
+                function onSubmit() {
+                    const pin = pinInput.value.trim();
+                    if (!pin || pin.length !== 4 || !/^[0-9]{4}$/.test(pin)) {
+                        pinError.innerText = 'Enter a valid 4-digit PIN';
+                        pinError.style.display = 'block';
+                        return;
+                    }
+                    cleanup();
+                    pinModal.hide();
+                    resolve(pin);
+                }
+
+                function onKey(e) { if (e.key === 'Enter') onSubmit(); }
+
+                function onInput(e) {
+                    // Auto-submit when 4 digits are entered
+                    if (AUTO_SUBMIT_PIN && pinInput.value.length === 4) {
+                        // Small delay to ensure the last digit is fully entered
+                        setTimeout(() => {
+                            if (pinInput.value.length === 4) {
+                                onSubmit();
+                            }
+                        }, 50);
+                    }
+                }
+
+                function onCancel() {
+                    cleanup();
+                    resolve(null);
+                }
+
+                submitBtn.addEventListener('click', onSubmit);
+                pinInput.addEventListener('keypress', onKey);
+                if (AUTO_SUBMIT_PIN) {
+                    pinInput.addEventListener('input', onInput);
+                }
+                pinModalEl.addEventListener('hidden.bs.modal', onCancel, { once: true });
+                pinInput.focus();
+            });
+        }
+
+        function showCashModal() {
+            return new Promise((resolve) => {
+                // Get the total from order summary (matching the displayed total)
+                const totalEl = document.getElementById('total');
+                let finalTotal = 0;
+                if (totalEl) {
+                    const totalText = totalEl.textContent.replace(/[₱,\s]/g, '');
+                    finalTotal = parseFloat(totalText) || 0;
+                } else {
+                    // Fallback: calculate if element not found
+                    const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+                    if (VAT_INCLUSIVE) {
+                        finalTotal = subtotal;
+                    } else {
+                        finalTotal = subtotal;
+                    }
+                }
+
+                const cashInput = document.getElementById('cashInput');
+                const cashError = document.getElementById('cashError');
+                const totalAmountDisplay = document.getElementById('totalAmountDisplay');
+                const changeDisplay = document.getElementById('changeDisplay');
+                const changeAmount = document.getElementById('changeAmount');
+                const cashModalEl = document.getElementById('cashModal');
+                const cashModal = new bootstrap.Modal(cashModalEl);
+
+                // Set total amount to match order summary total
+                totalAmountDisplay.value = finalTotal.toFixed(2);
+                cashInput.value = '';
+                cashError.style.display = 'none';
+                changeDisplay.style.display = 'none';
+
+                cashModal.show();
+
+                const submitBtn = document.getElementById('cashSubmitBtn');
+
+                function updateChange() {
+                    const cashValue = parseFloat(cashInput.value) || 0;
+                    const change = cashValue - finalTotal;
+                    
+                    if (cashValue > 0) {
+                        if (change < 0) {
+                            cashError.innerText = `Insufficient cash. Need ₱${(finalTotal - cashValue).toFixed(2)} more.`;
+                            cashError.style.display = 'block';
+                            changeDisplay.style.display = 'none';
+                        } else {
+                            cashError.style.display = 'none';
+                            changeDisplay.style.display = 'block';
+                            changeAmount.textContent = `₱${change.toFixed(2)}`;
+                        }
+                    } else {
+                        cashError.style.display = 'none';
+                        changeDisplay.style.display = 'none';
+                    }
+                }
+
+                function cleanup() {
+                    submitBtn.removeEventListener('click', onSubmit);
+                    cashInput.removeEventListener('input', updateChange);
+                    cashInput.removeEventListener('keypress', onKey);
+                    cashModalEl.removeEventListener('hidden.bs.modal', onCancel);
+                }
+
+                function onSubmit() {
+                    const cashValue = parseFloat(cashInput.value);
+                    if (!cashInput.value || isNaN(cashValue) || cashValue <= 0) {
+                        cashError.innerText = 'Please enter a valid cash amount';
+                        cashError.style.display = 'block';
+                        return;
+                    }
+                    if (cashValue < finalTotal) {
+                        cashError.innerText = `Insufficient cash. Need ₱${(finalTotal - cashValue).toFixed(2)} more.`;
+                        cashError.style.display = 'block';
+                        return;
+                    }
+                    cleanup();
+                    cashModal.hide();
+                    resolve(cashValue);
+                }
+
+                function onKey(e) { 
+                    if (e.key === 'Enter') {
+                        onSubmit();
+                    } else {
+                        // Update change display as user types
+                        setTimeout(updateChange, 10);
+                    }
+                }
+
+                function onCancel() {
+                    cleanup();
+                    resolve(null);
+                }
+
+                submitBtn.addEventListener('click', onSubmit);
+                cashInput.addEventListener('input', updateChange);
+                cashInput.addEventListener('keypress', onKey);
+                cashModalEl.addEventListener('hidden.bs.modal', onCancel, { once: true });
+                cashInput.focus();
+            });
+        }
+
+        function showReceipt(transaction) {
+            // Helper function to format currency with commas
+            function formatCurrency(value) {
+                return parseFloat(value || 0).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            
+            // Shorten transaction number for receipt printing so it fits nicely
+            const txnRaw = (transaction.transaction_number || transaction.id || '').toString();
+            const txnShort = txnRaw.length > 20 ? (txnRaw.slice(0, 20) + '...') : txnRaw;
+
+            // Friendly data fallbacks
+            const txnDate = transaction.date || transaction.created_at || new Date().toISOString();
+            const memberName = (transaction.member && transaction.member.name) || (transaction.member && transaction.member.full_name) || '';
+            const items = transaction.items || [];
+            const subtotal = parseFloat(transaction.subtotal || transaction.vatable_sale || 0);
+            const total = parseFloat(transaction.total_amount || subtotal || 0);
+            // For cash payments, rfidUsed should be 0; for debit, use amount_from_balance
+            const rfidUsed = transaction.payment_method === 'cash' ? 0 : parseFloat(transaction.amount_paid_by_member || transaction.paid_by_member || transaction.rfid_used || transaction.amount_from_balance || 0);
+
+            // Compute VAT and vatable sale for transparency (use transaction values when provided)
+            let vatAmount = parseFloat(transaction.vat_amount || 0);
+            let vatableSale = parseFloat(transaction.vatable_sale || 0);
+            try {
+                if (!vatAmount) {
+                    if (typeof VAT_INCLUSIVE !== 'undefined' && VAT_INCLUSIVE) {
+                        // When prices are VAT inclusive: extract VAT from subtotal
+                        vatAmount = subtotal - (subtotal / (1 + VAT_RATE));
+                        vatableSale = subtotal - vatAmount;
+                    } else {
+                        // When prices are VAT exclusive: VAT is computed on top of subtotal
+                        vatAmount = subtotal * VAT_RATE;
+                        vatableSale = subtotal - vatAmount;
+                    }
+                } else if (!vatableSale) {
+                    vatableSale = parseFloat(transaction.vatable_sale || (subtotal - vatAmount) || 0);
+                }
+            } catch (e) {
+                // If VAT_RATE or VAT_INCLUSIVE aren't available, fall back to zeros
+                vatAmount = parseFloat(transaction.vat_amount || 0);
+                vatableSale = parseFloat(transaction.vatable_sale || subtotal || 0);
+            }
+
+            // Build receipt HTML with presentable on-screen display and hidden print version
+            const memberSummary = transaction.member || null;
+            const formattedDate = new Date(txnDate).toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            
+            // Helper function to generate a single receipt copy
+            const generateReceiptCopy = (isMerchant = false) => {
+                return `
+                    <div class="receipt-display">
+                        ${isMerchant ? '<div class="copy-label">MERCHANT COPY</div>' : '<div class="copy-label">CUSTOMER COPY</div>'}
+                        <div class="rd-header">
+                            <div class="rd-title">GENGLO PRINTING SERVICES</div>
+                            <div class="rd-subtitle">Self-Checkout Receipt</div>
+                        </div>
+                        
+                        <div class="rd-info">
+                            <div class="rd-info-row">
+                                <span class="rd-info-label">Transaction ID:</span>
+                                <span class="rd-info-value">${txnRaw}</span>
+                            </div>
+                            <div class="rd-info-row">
+                                <span class="rd-info-label">Date & Time:</span>
+                                <span class="rd-info-value">${formattedDate}</span>
+                            </div>
+                            ${isMerchant ? `
+                            <div class="rd-info-row">
+                                <span class="rd-info-label">Receipt ID:</span>
+                                <span class="rd-info-value">#${transaction.id || ''}</span>
+                            </div>
+                            ` : ''}
+                            ${ memberName ? `
+                            <div class="rd-info-row">
+                                <span class="rd-info-label">Member Name:</span>
+                                <span class="rd-info-value">${memberName}</span>
+                            </div>
+                            ` : '' }
+                        </div>
+
+                        <div class="rd-section">
+                            <div class="rd-section-title">Items Purchased</div>
+                            <ul class="rd-items">
+                                ${items.map(i => `
+                                    <li class="rd-item">
+                                        <div>
+                                            <span class="rd-item-name">${i.product_name}</span>
+                                            ${i.quantity ? `<span class="rd-item-qty">× ${i.quantity}</span>` : ''}
+                                        </div>
+                                        <span class="rd-item-price">₱${formatCurrency(i.total_price || (i.unit_price * i.quantity) || 0)}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="rd-separator"></div>
+
+                        <div class="rd-section">
+                            <div class="rd-line">
+                                <span class="rd-line-label">Vatable Sale</span>
+                                <span class="rd-line-value">₱${formatCurrency(vatableSale)}</span>
+                            </div>
+                            <div class="rd-line">
+                                <span class="rd-line-label">VAT (${(VAT_RATE*100).toFixed(0)}%)</span>
+                                <span class="rd-line-value">₱${formatCurrency(vatAmount)}</span>
+                            </div>
+                            <div class="rd-line">
+                                <span class="rd-line-label">Subtotal</span>
+                                <span class="rd-line-value">₱${formatCurrency(subtotal)}</span>
+                            </div>
+                            <div class="rd-total">
+                                <span>Total Amount</span>
+                                <span>₱${formatCurrency(total)}</span>
+                            </div>
+                        </div>
+
+                        <div class="rd-payment-section">
+                            <div class="rd-section-title" style="margin-top: 0;">Payment Details</div>
+                            ${ transaction.payment_method === 'cash' ? `
+                            <div class="rd-payment-row">
+                                <span class="rd-line-label">Cash:</span>
+                                <span class="rd-line-value">₱${formatCurrency(transaction.amount_paid || total)}</span>
+                            </div>
+                            ${ parseFloat(transaction.change_amount || 0) > 0 ? `
+                            <div class="rd-payment-row">
+                                <span class="rd-line-label">Change:</span>
+                                <span class="rd-line-value" style="color: var(--brand); font-weight: 700;">₱${formatCurrency(transaction.change_amount || 0)}</span>
+                            </div>
+                            ` : '' }
+                            ` : '' }
+                            ${ transaction.payment_method === 'debit' || rfidUsed > 0 ? `
+                            <div class="rd-payment-row">
+                                <span class="rd-line-label">RFID Used:</span>
+                                <span class="rd-line-value">₱${formatCurrency(rfidUsed)}</span>
+                            </div>
+                            ` : '' }
+                        </div>
+
+                        ${ memberSummary && transaction.payment_method !== 'cash' ? `
+                        <div class="rd-member-summary">
+                            <div class="rd-member-row">
+                                <span class="rd-line-label">Balance:</span>
+                                <span class="rd-line-value">₱${formatCurrency(memberSummary.balance||memberSummary.available_balance||0)}</span>
+                            </div>
+                        </div>
+                        ` : '' }
+
+                        <div class="rd-thanks">Thank you for your purchase!</div>
+                    </div>
+                `;
+            };
+
+            // On-screen display version (presentable) - includes both copies
+            const displayHtml = generateReceiptCopy(false) + '<div class="copy-separator">═══════════════════════════</div>' + generateReceiptCopy(true);
+
+            // Helper function to generate print receipt copy
+            const generatePrintReceiptCopy = (isMerchant = false) => {
+                return `
+                    ${isMerchant ? '<div class="copy-label">MERCHANT COPY</div>' : '<div class="copy-label">CUSTOMER COPY</div>'}
+                    <div class="rp-center">
+                        <div class="rp-title">GENGLO PRINTING SERVICES</div>
+                        <div class="rp-sub">SELF-CHECKOUT RECEIPT</div>
+                    </div>
+                    <div class="rp-line"><span>Txn:</span><span>${txnShort}</span></div>
+                    <div class="rp-line"><span>Date:</span><span>${formattedDate}</span></div>
+                    ${isMerchant ? `<div class="rp-line"><span>Receipt ID:</span><span>#${transaction.id || ''}</span></div>` : ''}
+                    ${ memberName ? `<div class="rp-line"><span>Member Name:</span><span>${memberName}</span></div>` : '' }
+                    <div class="rp-section-title">ITEMS</div>
+                    <ul class="rp-items">
+                        ${items.map(i => {
+                            const productName = (i.product_name || '').toString();
+                            const qty = i.quantity ? ` x${i.quantity}` : '';
+                            const price = formatCurrency(i.total_price || (i.unit_price * i.quantity) || 0);
+                            return `
+                            <li>
+                                <div class="rp-line">
+                                    <span>${productName}${qty}</span>
+                                    <span>₱${price}</span>
+                                </div>
+                            </li>
+                        `;
+                        }).join('')}
+                    </ul>
+                    <div class="rp-sep"></div>
+                    <div class="rp-line"><span>Vatable Sale</span><span>₱${formatCurrency(vatableSale)}</span></div>
+                    <div class="rp-line"><span>VAT (${(VAT_RATE*100).toFixed(0)}%)</span><span>₱${formatCurrency(vatAmount)}</span></div>
+                    <div class="rp-line"><span>Subtotal:</span><span>₱${formatCurrency(subtotal)}</span></div>
+                    <div class="rp-line rp-total"><span>Total:</span><span>₱${formatCurrency(total)}</span></div>
+
+                    <div class="rp-section-title">PAYMENT</div>
+                    ${ transaction.payment_method === 'cash' ? `
+                    <div class="rp-line"><span>Cash:</span><span>₱${formatCurrency(transaction.amount_paid || total)}</span></div>
+                    ${ parseFloat(transaction.change_amount || 0) > 0 ? `
+                    <div class="rp-line"><span>Change:</span><span>₱${formatCurrency(transaction.change_amount || 0)}</span></div>
+                    ` : '' }
+                    ` : '' }
+                    ${ transaction.payment_method === 'debit' || rfidUsed > 0 ? `
+                    <div class="rp-line"><span>RFID Used:</span><span>₱${formatCurrency(rfidUsed)}</span></div>
+                    ` : '' }
+                    ${ memberSummary && transaction.payment_method !== 'cash' ? `
+                        <div class="rp-sep"></div>
+                        <div class="rp-line"><span> Balance</span><span>₱${formatCurrency(memberSummary.balance||memberSummary.available_balance||0)}</span></div>
+                    ` : '' }
+
+                    <div class="rp-center rp-thanks">Thank you for your purchase!</div>
+                `;
+            };
+
+            // Print version (hidden, thermal printer optimized) - includes both copies
+            const printHtml = `
+                <div id="receiptPaper" class="receipt-paper" style="display: none;">
+                    ${generatePrintReceiptCopy(false)}
+                    <div class="copy-separator">═══════════════════════════</div>
+                    ${generatePrintReceiptCopy(true)}
+                </div>
+            `;
+
+            // Set both versions
+            document.getElementById('receiptContent').innerHTML = displayHtml + printHtml;
+
+            // Build plain-text receipt in the exact layout requested for local printing
+            (function buildPlainText() {
+                const lines = [];
+                function money(v) { return '₱' + formatCurrency(v || 0); }
+
+                lines.push('GENGLO PRINTING SERVICES');
+                lines.push('SELF-CHECKOUT RECEIPT');
+                lines.push('');
+                lines.push('Txn ID:');
+                lines.push(txnShort);
+                lines.push('Date:');
+                lines.push(new Date(txnDate).toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }));
+                lines.push('');
+                lines.push('ITEMS');
+                items.forEach(i => {
+                    const name = (i.product_name || '').toString();
+                    const qty = i.quantity ? `(${i.quantity})` : '';
+                    const total = money(i.total_price || (i.unit_price * i.quantity) || 0);
+                    lines.push(`${name} ${qty}`.trim());
+                    lines.push(total);
+                });
+                lines.push('');
+                lines.push('Vatable Sale:');
+                lines.push(money(vatableSale));
+                lines.push(`VAT (${(VAT_RATE*100).toFixed(0)}%):`);
+                lines.push(money(vatAmount));
+                lines.push('Subtotal:');
+                lines.push(money(subtotal));
+                lines.push('Total:');
+                lines.push(money(total));
+                lines.push('');
+                lines.push('PAYMENT');
+                if (transaction.payment_method === 'cash') {
+                    lines.push('Cash:');
+                    lines.push(money(transaction.amount_paid || total));
+                    if (parseFloat(transaction.change_amount || 0) > 0) {
+                        lines.push('Change:');
+                        lines.push(money(transaction.change_amount || 0));
+                    }
+                } else {
+                    if (transaction.payment_method === 'debit' || rfidUsed > 0) {
+                        lines.push('RFID Used:');
+                        lines.push(money(rfidUsed));
+                    }
+                }
+                if (transaction.member && transaction.payment_method !== 'cash') {
+                    lines.push('');
+                    lines.push(' Balance:');
+                    lines.push(money(transaction.member.balance || transaction.member.available_balance || 0));
+                }
+                lines.push('');
+                lines.push('Thank you for your purchase!');
+
+                window.__lastReceiptText = lines.join('\r\n');
+            })();
+            // Also prepare a full HTML version for silent/auto printing so it
+            // matches the manual (visual) receipt template.
+            (function buildHtmlReceipt() {
+                try {
+                    const paperEl = document.getElementById('receiptPaper');
+                    if (!paperEl) {
+                        window.__lastReceiptHtml = null;
+                        return;
+                    }
+                    // Temporarily show the print version to capture its HTML
+                    const wasHidden = paperEl.style.display === 'none';
+                    if (wasHidden) paperEl.style.display = 'block';
+                    const paperHtml = paperEl.outerHTML;
+                    if (wasHidden) paperEl.style.display = 'none';
+                    const css = `
+                        <style>
+                            @page { 
+                                size: 58mm auto; 
+                                margin: 2mm; 
+                            }
+                            @media print {
+                                @page { 
+                                    size: 58mm auto; 
+                                    margin: 2mm; 
+                                }
+                            }
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            html, body { 
+                                width: 58mm; 
+                                padding: 0; 
+                                margin: 0;
+                                font-family: "Courier New", monospace;
+                                background: white;
+                            }
+                            .receipt-paper { 
+                                font-family: "Courier New", monospace; 
+                                font-size: 11pt; 
+                                line-height: 1.4; 
+                                width: 56mm; 
+                                max-width: 56mm; 
+                                margin: 0 auto; 
+                                padding: 2mm;
+                                color: #000 !important;
+                            }
+                            .receipt-paper * { 
+                                color: #000 !important; 
+                                background: transparent !important;
+                            }
+                            .receipt-paper .rp-center { 
+                                text-align: center; 
+                            }
+                            .receipt-paper .rp-title { 
+                                font-weight: 700; 
+                                font-size: 13pt; 
+                                margin: 2mm 0 1mm; 
+                                color: #000 !important;
+                                text-align: center;
+                            }
+                            .receipt-paper .rp-sub { 
+                                font-size: 10pt; 
+                                margin-bottom: 3mm; 
+                                color: #000 !important;
+                                text-align: center;
+                            }
+                            .receipt-paper .rp-line { 
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: baseline;
+                                width: 100%;
+                                margin: 1.5mm 0;
+                                color: #000 !important;
+                            }
+                            .receipt-paper .rp-line span:first-child { 
+                                flex: 1;
+                                text-align: left;
+                                padding-right: 2mm;
+                                word-wrap: break-word;
+                                color: #000 !important;
+                            }
+                            .receipt-paper .rp-line span:last-child { 
+                                flex-shrink: 0;
+                                text-align: right;
+                                white-space: nowrap;
+                                color: #000 !important;
+                            }
+                            .receipt-paper .rp-sep { 
+                                border-top: 1px dashed #000; 
+                                margin: 3mm 0;
+                                width: 100%;
+                            }
+                            .receipt-paper .rp-section-title { 
+                                margin: 2mm 0 1mm 0; 
+                                font-weight: 700;
+                                font-size: 11pt;
+                                color: #000 !important;
+                                text-transform: uppercase;
+                            }
+                            .receipt-paper .rp-items { 
+                                list-style: none; 
+                                padding: 0; 
+                                margin: 0 0 2mm 0; 
+                            }
+                            .receipt-paper .rp-items li { 
+                                margin: 1.5mm 0; 
+                                font-size: 10pt; 
+                                color: #000 !important;
+                            }
+                            .receipt-paper .rp-subline { 
+                                font-size: 9pt; 
+                                color: #000 !important;
+                                line-height: 1.3;
+                            }
+                            .receipt-paper .rp-total { 
+                                font-weight: 700; 
+                                font-size: 12pt; 
+                                color: #c00 !important;
+                                margin-top: 2mm;
+                            }
+                            .receipt-paper .rp-box { 
+                                border: 1px dashed #000; 
+                                padding: 2mm; 
+                                margin: 2mm 0; 
+                                color: #000 !important; 
+                            }
+                            .receipt-paper .rp-thanks { 
+                                margin-top: 3mm; 
+                                font-weight: 700;
+                                font-size: 11pt;
+                                color: #000 !important;
+                                text-align: center;
+                            }
+                            .receipt-paper .copy-label {
+                                text-align: center;
+                                font-size: 12pt;
+                                font-weight: bold;
+                                margin: 3mm 0;
+                                padding: 2mm 0;
+                                border-top: 2px dashed #000;
+                                border-bottom: 2px dashed #000;
+                                color: #000 !important;
+                            }
+                            .receipt-paper .copy-separator {
+                                text-align: center;
+                                margin: 5mm 0;
+                                font-size: 9pt;
+                                letter-spacing: 2px;
+                                border-top: 1px dashed #000;
+                                padding-top: 3mm;
+                                color: #000 !important;
+                            }
+                        </style>
+                    `;
+                    window.__lastReceiptHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title>${css}</head><body>${paperHtml}</body></html>`;
+                } catch (e) {
+                    window.__lastReceiptHtml = null;
+                }
+            })();
+            // Flag to auto-print once the modal is fully shown (always enabled)
+            window.__autoPrintReceipt = true; // Always auto-print receipts
+            const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+            receiptModal.show();
+            
+            // Direct auto-print trigger as backup (in addition to event listener)
+            // This ensures printing happens even if the event listener fails
+            setTimeout(() => {
+                if (window.__autoPrintReceipt) {
+                    try {
+                        printReceipt();
+                    } catch (e) {
+                        console.error('Direct auto-print error:', e);
+                    }
+                }
+            }, 500);
+        }
+
+        async function printReceipt() {
+            // Manual print: Create a print window with proper receipt template
+            // Use stored HTML receipt if available, otherwise build from DOM
+            let receiptHtml = '';
+            
+            if (window.__lastReceiptHtml) {
+                // Use the pre-built HTML receipt (includes CSS)
+                receiptHtml = window.__lastReceiptHtml;
+            } else {
+                // Build receipt HTML from DOM element
+                const paper = document.getElementById('receiptPaper');
+                if (!paper) {
+                    showMessage('Receipt data not available. Please complete a transaction first.', 'danger');
+                    return;
+                }
+                
+                // Create print template with proper CSS - matches buildHtmlReceipt exactly
+                const css = `
+                    <style>
+                        @page { 
+                            size: 58mm auto; 
+                            margin: 2mm; 
+                        }
+                        @media print {
+                            @page { 
+                                size: 58mm auto; 
+                                margin: 2mm; 
+                            }
+                        }
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        html, body { 
+                            width: 58mm; 
+                            padding: 0; 
+                            margin: 0;
+                            font-family: "Courier New", monospace;
+                            background: white;
+                        }
+                        .receipt-paper { 
+                            font-family: "Courier New", monospace; 
+                            font-size: 11pt; 
+                            line-height: 1.4; 
+                            width: 56mm; 
+                            max-width: 56mm; 
+                            margin: 0 auto; 
+                            padding: 2mm;
+                            color: #000 !important;
+                        }
+                        .receipt-paper * { 
+                            color: #000 !important; 
+                            background: transparent !important;
+                        }
+                        .receipt-paper .rp-center { 
+                            text-align: center; 
+                        }
+                        .receipt-paper .rp-title { 
+                            font-weight: 700; 
+                            font-size: 13pt; 
+                            margin: 2mm 0 1mm; 
+                            color: #000 !important;
+                            text-align: center;
+                        }
+                        .receipt-paper .rp-sub { 
+                            font-size: 10pt; 
+                            margin-bottom: 3mm; 
+                            color: #000 !important;
+                            text-align: center;
+                        }
+                        .receipt-paper .rp-line { 
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: baseline;
+                            width: 100%;
+                            margin: 1.5mm 0;
+                            color: #000 !important;
+                        }
+                        .receipt-paper .rp-line span:first-child { 
+                            flex: 1;
+                            text-align: left;
+                            padding-right: 2mm;
+                            word-wrap: break-word;
+                            color: #000 !important;
+                        }
+                        .receipt-paper .rp-line span:last-child { 
+                            flex-shrink: 0;
+                            text-align: right;
+                            white-space: nowrap;
+                            color: #000 !important;
+                        }
+                        .receipt-paper .rp-sep { 
+                            border-top: 1px dashed #000; 
+                            margin: 3mm 0;
+                            width: 100%;
+                        }
+                        .receipt-paper .rp-section-title { 
+                            margin: 2mm 0 1mm 0; 
+                            font-weight: 700;
+                            font-size: 11pt;
+                            color: #000 !important;
+                            text-transform: uppercase;
+                        }
+                        .receipt-paper .rp-items { 
+                            list-style: none; 
+                            padding: 0; 
+                            margin: 0 0 2mm 0; 
+                        }
+                        .receipt-paper .rp-items li { 
+                            margin: 1.5mm 0; 
+                            font-size: 10pt; 
+                            color: #000 !important;
+                        }
+                        .receipt-paper .rp-subline { 
+                            font-size: 9pt; 
+                            color: #000 !important;
+                            line-height: 1.3;
+                        }
+                        .receipt-paper .rp-total { 
+                            font-weight: 700; 
+                            font-size: 12pt; 
+                            color: #c00 !important;
+                            margin-top: 2mm;
+                        }
+                        .receipt-paper .rp-box { 
+                            border: 1px dashed #000; 
+                            padding: 2mm; 
+                            margin: 2mm 0; 
+                            color: #000 !important; 
+                        }
+                        .receipt-paper .rp-thanks { 
+                            margin-top: 3mm; 
+                            font-weight: 700;
+                            font-size: 11pt;
+                            color: #000 !important;
+                            text-align: center;
+                        }
+                        .receipt-paper .copy-label {
+                            text-align: center;
+                            font-size: 12pt;
+                            font-weight: bold;
+                            margin: 3mm 0;
+                            padding: 2mm 0;
+                            border-top: 2px dashed #000;
+                            border-bottom: 2px dashed #000;
+                            color: #000 !important;
+                        }
+                        .receipt-paper .copy-separator {
+                            text-align: center;
+                            margin: 5mm 0;
+                            font-size: 9pt;
+                            letter-spacing: 2px;
+                            border-top: 1px dashed #000;
+                            padding-top: 3mm;
+                            color: #000 !important;
+                        }
+                    </style>
+                `;
+                receiptHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title>${css}</head><body>${paper.outerHTML}</body></html>`;
+            }
+
+            // Try to open print window
+            const printWin = window.open('', 'RECEIPT_PRINT', 'width=420,height=600,scrollbars=yes');
+            
+            if (!printWin) {
+                // Popup blocked - fall back to in-page printing
+                showMessage('Popup blocked. Using in-page print...', 'warning');
+                window.__autoPrintReceiptActive = true;
+                document.body.classList.add('print-receipt-only');
+                setTimeout(() => {
+                    try { 
+                        window.print(); 
+                    } catch (e) {
+                        showMessage('Print failed: ' + e.message, 'danger');
+                        document.body.classList.remove('print-receipt-only');
+                        window.__autoPrintReceiptActive = false;
+                    }
+                }, 100);
+                return;
+            }
+
+            // Add print button to the receipt HTML
+            const printButtonHtml = `
+                <div style="text-align: center; padding: 10px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                    <button id="printBtn" onclick="window.print()" style="
+                        background-color: #007bff;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        font-weight: bold;
+                    ">🖨️ Print Receipt</button>
+                    <button id="closeBtn" onclick="window.close()" style="
+                        background-color: #6c757d;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        margin-left: 10px;
+                    ">✕ Close</button>
+                </div>
+                <style>
+                    @media print {
+                        #printBtn, #closeBtn { display: none !important; }
+                        div[style*="text-align: center"][style*="padding: 10px"] { display: none !important; }
+                    }
+                </style>
+            `;
+
+            // Extract body content from receiptHtml and add print button
+            let bodyContent = '';
+            const bodyMatch = receiptHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            if (bodyMatch) {
+                bodyContent = bodyMatch[1];
+            } else {
+                bodyContent = receiptHtml;
+            }
+
+            // Build complete HTML with print button
+            const fullReceiptHtml = receiptHtml.replace(
+                /<body[^>]*>/i,
+                `<body>${printButtonHtml}`
+            ).replace(
+                /<\/body>/i,
+                `<script>
+                    // Auto-focus print button for keyboard accessibility
+                    window.addEventListener('load', function() {
+                        const printBtn = document.getElementById('printBtn');
+                        if (printBtn) {
+                            printBtn.focus();
+                        }
+                    });
+                    
+                    // Handle keyboard shortcuts
+                    document.addEventListener('keydown', function(e) {
+                        // Ctrl+P or Cmd+P to print
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                            e.preventDefault();
+                            window.print();
+                        }
+                        // Escape to close
+                        if (e.key === 'Escape') {
+                            window.close();
+                        }
+                    });
+                <\/script></body>`
+            );
+
+            // Write receipt HTML to print window
+            printWin.document.open();
+            printWin.document.write(fullReceiptHtml);
+            printWin.document.close();
+            
+            // When user clicks Print, treat it like an auto-print action so the modal
+            // will be closed and a new transaction started after printing completes.
+            window.__autoPrintReceiptActive = true;
+
+            // Provide a fallback to close modal/new transaction in case afterprint doesn't fire
+            let fallbackFired = false;
+            const fallbackTimer = setTimeout(() => {
+                if (window.__autoPrintReceiptActive) {
+                    window.__autoPrintReceiptActive = false;
+                    fallbackFired = true;
+                    try {
+                        const modalEl = document.getElementById('receiptModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modalInstance.hide();
+                    } catch (e) { /* ignore */ }
+                    setTimeout(() => { try { newTransaction(); } catch (e) {} }, 200);
+                }
+                try { printWin.close(); } catch (e) {}
+            }, 3000);
+
+            // Function to trigger print dialog
+            const triggerPrint = () => {
+                try {
+                    printWin.focus();
+                    // Small delay to ensure content is rendered
+                    setTimeout(() => {
+                        try {
+                            printWin.print();
+                        } catch (e) {
+                            console.error('Print error:', e);
+                            showMessage('Failed to open print dialog. Please use Ctrl+P or File > Print in the new window.', 'warning');
+                        }
+                    }, 100);
+                } catch (e) {
+                    console.error('Focus error:', e);
+                }
+            };
+
+            // Wait for content to load, then trigger print
+            if (printWin.document.readyState === 'complete') {
+                triggerPrint();
+            } else {
+                printWin.onload = function() {
+                    triggerPrint();
+                };
+            }
+            
+            // Fallback: if onload doesn't fire, try after a delay
+            setTimeout(() => {
+                if (printWin.document && printWin.document.readyState === 'complete') {
+                    triggerPrint();
+                }
+            }, 500);
+            
+            // Try to handle afterprint from the popup if available
+            try {
+                printWin.onafterprint = function() {
+                    if (fallbackFired) return;
+                    clearTimeout(fallbackTimer);
+                    if (window.__autoPrintReceiptActive) {
+                        window.__autoPrintReceiptActive = false;
+                        try {
+                            const modalEl = document.getElementById('receiptModal');
+                            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            modalInstance.hide();
+                        } catch (e) { /* ignore */ }
+                        setTimeout(() => { try { newTransaction(); } catch (e) {} }, 200);
+                    }
+                    try { printWin.close(); } catch (e) {}
+                };
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        function newTransaction() {
+            clearCart();
+        }
+
+        
+        function clearCart() {
+            cart = [];
+            currentMember = null;
+            document.getElementById('memberInfo').style.display = 'none';
+            updateCart();
+        }
+
+        // Note: barcodeInput Enter key handling is already done in the keydown event listener above (line 503)
+        // Removing duplicate keypress listener to prevent double-adding items
+
+        document.getElementById('rfidInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') scanRFID();
+        });
+
+        // Helpers to show/hide the RFID input area
+        function showRFIDInput() {
+            const wrapper = document.getElementById('rfidWrapper');
+            const rfidEl = document.getElementById('rfidInput');
+            if (!wrapper || !rfidEl) return;
+            wrapper.style.display = 'block';
+            rfidEl.focus();
+            // select value to make it obvious for keyboard-wedge scanners
+            rfidEl.select();
+        }
+
+        function hideRFIDInput() {
+            const wrapper = document.getElementById('rfidWrapper');
+            const rfidEl = document.getElementById('rfidInput');
+            if (!wrapper || !rfidEl) return;
+            wrapper.style.display = 'none';
+            rfidEl.value = '';
+        }
+
+        // Change quantity by delta (e.g., +/- buttons)
+        function changeQuantity(productId, delta) {
+            const idx = cart.findIndex(i => i.id === productId);
+            if (idx === -1) return;
+            const item = cart[idx];
+            const newQty = item.quantity + delta;
+            setQuantity(productId, newQty);
+        }
+
+        // Set absolute quantity from input; validates against available_stock
+        function setQuantity(productId, qty) {
+            const idx = cart.findIndex(i => i.id === productId);
+            if (idx === -1) return;
+            let n = parseInt(qty, 10);
+            if (isNaN(n) || n < 1) {
+                showMessage('Quantity must be at least 1', 'warning');
+                return;
+            }
+            const item = cart[idx];
+            const available = typeof item.available_stock !== 'undefined' ? item.available_stock : (item.stock || item.stock_quantity || 0);
+            if (n > available) {
+                showMessage(`Cannot set quantity. Only ${available} available.`, 'warning');
+                return;
+            }
+            cart[idx].quantity = n;
+            updateCart();
+        }
+
+        // Update cart quantity as user types (live updates)
+        function onQuantityInput(productId, inputEl) {
+            let raw = inputEl.value;
+            // allow empty string while typing but don't apply until number
+            if (raw === '') return;
+            let n = parseInt(raw, 10);
+            if (isNaN(n)) return;
+            if (n < 1) {
+                inputEl.value = 1;
+                n = 1;
+            }
+            const idx = cart.findIndex(i => i.id === productId);
+            if (idx === -1) return;
+            const item = cart[idx];
+            const available = typeof item.available_stock !== 'undefined' ? item.available_stock : (item.stock || item.stock_quantity || 0);
+            if (n > available) {
+                // clamp to available but leave input so user sees limit
+                inputEl.value = available;
+                n = available;
+                showMessage(`Only ${available} available.`, 'warning');
+            }
+            cart[idx].quantity = n;
+            updateCart();
+        }
+
+        // showMessage: display a transient toast message
+        // type: 'danger'|'warning'|'info'|'success'
+        // timeout: milliseconds before auto-close (default: 5000ms = 5 seconds)
+        function showMessage(message, type='danger', timeout=5000) {
+            const toastEl = document.getElementById('kioskToast');
+            const toastBody = document.getElementById('kioskToastBody');
+            if (!toastEl || !toastBody) {
+                // fallback to alert if toast container missing
+                alert(message);
+                return;
+            }
+
+            // map types to bg classes
+            const typeClassMap = {
+                'danger': 'bg-danger text-white',
+                'warning': 'bg-warning text-dark',
+                'info': 'bg-info text-dark',
+                'success': 'bg-success text-white'
+            };
+
+            // Hide any existing toast first, then show new one
+            const existingToast = bootstrap.Toast.getInstance(toastEl);
+            if (existingToast) {
+                existingToast.dispose(); // Clean up existing instance
+            }
+            
+            // Clear any existing auto-close timer
+            if (toastEl._autoCloseTimer) {
+                clearTimeout(toastEl._autoCloseTimer);
+                toastEl._autoCloseTimer = null;
+            }
+
+            // Reset classes then apply the chosen one
+            toastEl.className = 'toast align-items-center border-0';
+            const classes = typeClassMap[type] || typeClassMap['danger'];
+            toastEl.classList.add(...classes.split(' '));
+
+            toastBody.textContent = message;
+            
+            // Force visibility
+            toastEl.style.display = 'block';
+            toastEl.style.opacity = '1';
+            toastEl.style.visibility = 'visible';
+            toastEl.style.zIndex = '9999';
+            
+            // Create new Bootstrap Toast instance with auto-hide enabled
+            const bsToast = new bootstrap.Toast(toastEl, { 
+                delay: timeout,
+                autohide: timeout > 0,
+                animation: true
+            });
+            
+            // Store toast instance for cleanup
+            toastEl._bsToast = bsToast;
+            
+            // Set up auto-close timer as backup (in case Bootstrap doesn't work)
+            if (timeout > 0) {
+                toastEl._autoCloseTimer = setTimeout(() => {
+                    if (bsToast && toastEl.classList.contains('show')) {
+                        bsToast.hide();
+                    }
+                }, timeout);
+            }
+            
+            // Ensure toast is shown
+            bsToast.show();
+            
+            // Force show if Bootstrap doesn't trigger it
+            setTimeout(() => {
+                if (toastEl.style.display === 'none' || !toastEl.classList.contains('show')) {
+                    toastEl.style.display = 'block';
+                    toastEl.classList.add('show');
+                }
+            }, 10);
+            
+            // Clean up when toast is hidden (either manually closed or auto-closed)
+            toastEl.addEventListener('hidden.bs.toast', function onHidden() {
+                // Clear auto-close timer if still running
+                if (toastEl._autoCloseTimer) {
+                    clearTimeout(toastEl._autoCloseTimer);
+                    toastEl._autoCloseTimer = null;
+                }
+                // Hide the toast element
+                toastEl.style.display = 'none';
+                toastEl.classList.remove('show');
+                // Remove this event listener to prevent memory leaks
+                toastEl.removeEventListener('hidden.bs.toast', onHidden);
+            }, { once: true });
+        }
+
+        // Auto-detect RFID card input (keyboard-wedge or rapid input). Debounce to allow scanners to finish.
+        (function(){
+            const rfidEl = document.getElementById('rfidInput');
+            let rfidTimer = null;
+            const DEBOUNCE_MS = 200; // adjust to match scanner speed if needed
+
+            rfidEl.addEventListener('input', function() {
+                if (rfidTimer) clearTimeout(rfidTimer);
+                rfidTimer = setTimeout(() => {
+                    const val = rfidEl.value.trim();
+                    if (val) {
+                        scanRFID();
+                    }
+                }, DEBOUNCE_MS);
+            });
+
+            // After a successful scanRFID run, the scanRFID function clears and focuses the input.
+            // Ensure focus on page load for convenience.
+            window.addEventListener('load', () => { rfidEl.focus(); });
+        })();
+
+        // Ensure only the receipt prints when user triggers print (Ctrl+P or menu) while receipt is shown
+        window.addEventListener('beforeprint', () => {
+            const modalEl = document.getElementById('receiptModal');
+            if (modalEl && modalEl.classList.contains('show')) {
+                document.body.classList.add('print-receipt-only');
+            }
+        });
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('print-receipt-only');
+            // If we initiated an automatic print for the receipt, close modal and start a new transaction
+            if (window.__autoPrintReceiptActive) {
+                window.__autoPrintReceiptActive = false;
+                try {
+                    const modalEl = document.getElementById('receiptModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modalInstance.hide();
+                } catch (e) { /* ignore */ }
+                // small delay to allow modal hide animation, then clear cart/start new transaction
+                setTimeout(() => { try { newTransaction(); } catch (e) {} }, 200);
+            }
+        });
+
+        // Auto-trigger printing when the receipt modal is fully shown.
+        // Uses the exact same printReceipt() function as manual print to ensure identical template.
+        // This ensures auto-print fetches and uses the same template as manual printing.
+        (function(){
+            const modalEl = document.getElementById('receiptModal');
+            if (!modalEl) return;
+            modalEl.addEventListener('shown.bs.modal', async () => {
+                // Ensure Settings button is always accessible when modal is shown
+                ensureSettingsAccessible();
+                
+                if (window.__autoPrintReceipt) {
+                    window.__autoPrintReceipt = false;
+
+                    // Always use the exact same printReceipt() function as manual print
+                    // This ensures auto-print uses the same template fetching and printing process
+                    setTimeout(() => {
+                        try {
+                            // printReceipt() fetches the template from window.__lastReceiptHtml
+                            // which is built from the same receiptPaper element used in manual printing
+                            // This guarantees identical template and formatting
+                            printReceipt();
+                        } catch (e) {
+                            console.error('Auto-print error:', e);
+                            // Fallback to in-page print if printReceipt fails
+                            window.__autoPrintReceiptActive = true;
+                            document.body.classList.add('print-receipt-only');
+                            setTimeout(() => { try { window.print(); } catch (e2) {} }, 300);
+                        }
+                    }, 300);
+                }
+            });
+            // Also ensure Settings is accessible when modal is about to show
+            modalEl.addEventListener('show.bs.modal', () => {
+                ensureSettingsAccessible();
+            });
+        })();
+
+        // Handle logout - always show confirmation modal
+        function handleLogout(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+            }
+            
+            // Close dropdown menu if open
+            const dropdown = document.querySelector('#settingsDropdown');
+            if (dropdown && bootstrap && bootstrap.Dropdown) {
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdown);
+                if (dropdownInstance) {
+                    dropdownInstance.hide();
+                }
+            }
+            
+            const logoutUrl = '{% url "kiosk_logout" %}';
+            
+            // Small delay to ensure dropdown closes first, then always show confirmation
+            setTimeout(function() {
+                // Always show confirmation modal before logout
+                showLogoutConfirmModal(logoutUrl);
+            }, 100);
+            
+            return false;
+        }
+
+        // Show custom logout confirmation modal
+        function showLogoutConfirmModal(logoutUrl) {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (!modal) {
+                console.error('Logout confirmation modal not found');
+                // Fallback to browser confirm if modal doesn't exist
+                const message = cart.length > 0 
+                    ? 'You have items in your cart. Logging out will clear your cart. Do you want to continue?'
+                    : 'Are you sure you want to logout?';
+                if (confirm(message)) {
+                    window.location.href = logoutUrl;
+                }
+                return;
+            }
+            
+            // Check if Bootstrap is available
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap is not loaded');
+                // Fallback to browser confirm
+                const message = cart.length > 0 
+                    ? 'You have items in your cart. Logging out will clear your cart. Do you want to continue?'
+                    : 'Are you sure you want to logout?';
+                if (confirm(message)) {
+                    window.location.href = logoutUrl;
+                }
+                return;
+            }
+            
+            // Update modal message based on cart state
+            const modalBody = modal.querySelector('.modal-body p');
+            if (modalBody) {
+                if (cart.length > 0) {
+                    modalBody.textContent = 'You have items in your cart. Logging out will clear your cart. Do you want to continue?';
+                } else {
+                    modalBody.textContent = 'Are you sure you want to logout?';
+                }
+            }
+            
+            // Get or create modal instance
+            let bsModal = bootstrap.Modal.getInstance(modal);
+            if (!bsModal) {
+                bsModal = new bootstrap.Modal(modal, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+            }
+            
+            // Remove existing event listeners to prevent duplicates
+            const confirmBtn = modal.querySelector('.btn-confirm');
+            const cancelBtn = modal.querySelector('.btn-cancel');
+            
+            // Clone and replace buttons to remove old listeners
+            if (confirmBtn) {
+                const newConfirmBtn = confirmBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                newConfirmBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    bsModal.hide();
+                    setTimeout(function() {
+                        window.location.href = logoutUrl;
+                    }, 300);
+                });
+            }
+            
+            if (cancelBtn) {
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                newCancelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    bsModal.hide();
+                });
+            }
+            
+            // Show modal
+            try {
+                bsModal.show();
+            } catch (error) {
+                console.error('Error showing modal:', error);
+                // Fallback to browser confirm
+                const message = cart.length > 0 
+                    ? 'You have items in your cart. Logging out will clear your cart. Do you want to continue?'
+                    : 'Are you sure you want to logout?';
+                if (confirm(message)) {
+                    window.location.href = logoutUrl;
+                }
+            }
+        }
+
+        // Ensure Settings button is always clickable, regardless of cart state or modal visibility
+        function ensureSettingsAccessible() {
+            const settingsBtn = document.getElementById('settingsDropdown');
+            const adminMenu = document.querySelector('.admin-menu');
+            const dropdown = document.querySelector('.kiosk-header .dropdown');
+            const kioskHeader = document.querySelector('.kiosk-header');
+            
+            // Ensure header has high z-index
+            if (kioskHeader) {
+                kioskHeader.style.zIndex = '1300';
+                kioskHeader.style.position = 'relative';
+            }
+            
+            if (settingsBtn) {
+                settingsBtn.disabled = false;
+                settingsBtn.style.pointerEvents = 'auto';
+                settingsBtn.style.opacity = '1';
+                settingsBtn.style.cursor = 'pointer';
+                settingsBtn.style.zIndex = '1303';
+                // Remove any disabled class
+                settingsBtn.classList.remove('disabled');
+                // Force enable the button
+                settingsBtn.removeAttribute('disabled');
+            }
+            
+            // Ensure parent containers also have proper z-index and pointer-events
+            if (adminMenu) {
+                adminMenu.style.zIndex = '1301';
+                adminMenu.style.pointerEvents = 'auto';
+            }
+            
+            if (dropdown) {
+                dropdown.style.zIndex = '1302';
+                dropdown.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Run on page load to ensure Settings is accessible
+        document.addEventListener('DOMContentLoaded', function() {
+            ensureSettingsAccessible();
+        });
+
+        // Auto-logout after 1 minute of inactivity
+        (function() {
+            const INACTIVITY_TIMEOUT = 50 * 60 * 1000; // 1 minute in milliseconds
+            const WARNING_TIME = 30 * 1000; // 30 seconds before logout
+            const LOGOUT_URL = '{% url "kiosk_logout" %}';
+            let inactivityTimer = null;
+            let warningTimer = null;
+            let warningShown = false;
+
+            // Events that indicate user activity
+            const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click', 'input'];
+            
+            function clearAllTimers() {
+                if (inactivityTimer) {
+                    clearTimeout(inactivityTimer);
+                    inactivityTimer = null;
+                }
+                if (warningTimer) {
+                    clearTimeout(warningTimer);
+                    warningTimer = null;
+                }
+                warningShown = false;
+            }
+            
+            function resetInactivityTimer() {
+                // Clear existing timers
+                clearAllTimers();
+                
+                // Set warning timer (30 seconds before logout)
+                warningTimer = setTimeout(() => {
+                    warningShown = true;
+                    showMessage('You will be logged out in 30 seconds due to inactivity.', 'warning', 30000);
+                }, INACTIVITY_TIMEOUT - WARNING_TIME);
+                
+                // Set logout timer (1 minute)
+                inactivityTimer = setTimeout(() => {
+                    window.location.href = LOGOUT_URL;
+                }, INACTIVITY_TIMEOUT);
+            }
+
+            // Initialize timer on page load
+            resetInactivityTimer();
+
+            // Listen for user activity events
+            activityEvents.forEach(event => {
+                document.addEventListener(event, resetInactivityTimer, true);
+            });
+
+            // Also track visibility changes (tab focus)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    resetInactivityTimer();
+                }
+            });
+        })();
+    </script>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutConfirmModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Confirm Logout
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
+                    <p>You have items in your cart. Logging out will clear your cart. Do you want to continue?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-confirm">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

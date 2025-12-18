@@ -1,0 +1,513 @@
+{% load currency_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Debit Receipt</title>
+    <style>
+        @page { size: 58mm auto; margin: 2mm; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", monospace;
+            background: #f5f5f5;
+        }
+        @media screen {
+            body {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+        }
+        .receipt-paper {
+            width: 56mm;
+            margin: 0 auto;
+            padding: 2mm;
+            font-size: 11pt;
+            line-height: 1.45;
+            color: #000;
+            background: #fff;
+        }
+        @media screen {
+            .receipt-paper {
+                border: 2px dashed #333;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+        }
+        .rp-center { text-align: center; }
+        .rp-title { 
+            font-size: 15pt; 
+            font-weight: bold; 
+            margin-bottom: 2mm;
+        }
+        .rp-address {
+            font-size: 11pt;
+            margin-bottom: 1mm;
+        }
+        .rp-phone {
+            font-size: 11pt;
+            margin-bottom: 2mm;
+        }
+        .rp-separator {
+            text-align: center;
+            margin: 2mm 0;
+            font-size: 9pt;
+            letter-spacing: 1px;
+        }
+        .rp-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5mm 0;
+            font-size: 11pt;
+        }
+        .rp-line-label {
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        .rp-purchase-title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 3mm 0;
+            text-transform: uppercase;
+        }
+        .rp-section {
+            margin: 2mm 0;
+        }
+        .rp-total-section {
+            margin-top: 3mm;
+        }
+        .rp-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5mm 0;
+            font-size: 11pt;
+        }
+        .rp-total-label {
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        .rp-total-value {
+            font-weight: bold;
+            text-align: right;
+        }
+        .rp-grand-total {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 2mm;
+            padding-top: 2mm;
+            border-top: 2px solid #000;
+        }
+        .rp-thanks {
+            text-align: center;
+            font-size: 11pt;
+            font-weight: bold;
+            margin-top: 4mm;
+            margin-bottom: 2mm;
+            text-transform: uppercase;
+        }
+        .rp-member-info {
+            font-size: 11pt;
+            margin: 1mm 0;
+        }
+        .rp-response {
+            font-weight: bold;
+            color: #006400;
+        }
+        .print-controls {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        #printBtn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        #printBtn:hover {
+            background-color: #0056b3;
+        }
+        #closeBtn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #closeBtn:hover {
+            background-color: #545b62;
+        }
+
+        .copy-label {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 3mm 0;
+            padding: 2mm 0;
+            border-top: 2px dashed #000;
+            border-bottom: 2px dashed #000;
+        }
+        .copy-separator {
+            text-align: center;
+            margin: 5mm 0;
+            font-size: 9pt;
+            letter-spacing: 2px;
+            border-top: 1px dashed #000;
+            padding-top: 3mm;
+        }
+        @media print {
+            @page { size: 58mm auto; margin: 2mm; }
+            .receipt-paper { width: 56mm !important; }
+            .print-controls { display: none !important; }
+            .copy-separator { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-controls">
+        <button id="printBtn" onclick="window.print()">🖨️ Print Receipt</button>
+        <button id="closeBtn" onclick="window.close()">✕ Close</button>
+    </div>
+<div class="receipt-paper">
+
+    <!-- CUSTOMER COPY -->
+    <div class="copy-label">CUSTOMER COPY</div>
+
+    <!-- Header Section -->
+    <div class="rp-center">
+        <div class="rp-title">{{ shop_name|default:"BUSINESS NAME" }}</div>
+        <div class="rp-address">{{ shop_address|default:"1234 Main Street, Suite 567, City Name, State 54321" }}</div>
+        <div class="rp-phone">{{ shop_phone|default:"123-456-7890" }}</div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Transaction Info -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Transaction ID:</span>
+            <span>#{{ transaction.transaction_number }}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Type:</span>
+            <span>Debit</span>
+        </div>
+    </div>
+
+    <!-- Purchase Title -->
+    <div class="rp-purchase-title">PURCHASE</div>
+
+    <!-- Date and Time -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span>{{ transaction.created_at|date:"m/d/Y" }}</span>
+            <span>{{ transaction.created_at|date:"H:i" }}</span>
+        </div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Member/Card Info -->
+    <div class="rp-section">
+        {% if transaction.member %}
+        <div class="rp-member-info">
+            <div class="rp-line">
+                <span class="rp-line-label">Member:</span>
+                <span>{{ transaction.member.full_name }}</span>
+            </div>
+            {% if transaction.member.rfid_card_number %}
+            <div class="rp-line">
+                <span class="rp-line-label">Card Number:</span>
+                <span>****{{ transaction.member.rfid_card_number|slice:"-4:" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="rp-member-info">
+            <div class="rp-line">
+                <span class="rp-line-label">Card:</span>
+                <span>Debit Card</span>
+            </div>
+        </div>
+        {% endif %}
+        <div class="rp-line">
+            <span class="rp-line-label">Entry Mode:</span>
+            <span>{% if transaction.member %}RFID{% else %}Manual{% endif %}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Response:</span>
+            <span class="rp-response">APPROVED</span>
+        </div>
+        {% if approval_code %}
+        <div class="rp-line">
+            <span class="rp-line-label">Approval Code:</span>
+            <span>{{ approval_code }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Items List -->
+    <div class="rp-section">
+        {% for item in transaction.items.all %}
+        <div class="rp-line">
+            <span>{% if item.quantity > 1 %}{{ item.product_name }} (x{{ item.quantity }}){% else %}{{ item.product_name }}{% endif %}</span>
+            <span>₱{{ item.total_price|currency }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Total Section -->
+    <div class="rp-total-section">
+        <div class="rp-total-row">
+            <span class="rp-total-label">Sub Total:</span>
+            <span class="rp-total-value">₱{{ transaction.vatable_sale|currency }}</span>
+        </div>
+        <div class="rp-total-row">
+            <span class="rp-total-label">Sales Tax:</span>
+            <span class="rp-total-value">₱{{ transaction.vat_amount|currency }}</span>
+        </div>
+        <div class="rp-total-row rp-grand-total">
+            <span>TOTAL (PHP):</span>
+            <span>₱{{ transaction.total_amount|currency }}</span>
+        </div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Payment Method Info -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Paid By:</span>
+            <span>Debit</span>
+        </div>
+        {% if transaction.amount_from_balance > 0 %}
+        <div class="rp-line">
+            <span class="rp-line-label">From Balance:</span>
+            <span>₱{{ transaction.amount_from_balance|currency }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Available Balance and Credit Balance (if member exists) -->
+    {% if transaction.member %}
+    <div class="rp-separator">******************************</div>
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Available Balance:</span>
+            <span>₱{{ transaction.member.available_balance|currency }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Footer -->
+    <div class="rp-thanks">THANK YOU FOR YOUR PURCHASE</div>
+
+    <!-- Separator between copies -->
+    <div class="copy-separator">═══════════════════════════</div>
+
+    <!-- MERCHANT COPY -->
+    <div class="copy-label">MERCHANT COPY</div>
+
+    <!-- Header Section -->
+    <div class="rp-center">
+        <div class="rp-title">{{ shop_name|default:"BUSINESS NAME" }}</div>
+        <div class="rp-address">{{ shop_address|default:"1234 Main Street, Suite 567, City Name, State 54321" }}</div>
+        <div class="rp-phone">{{ shop_phone|default:"123-456-7890" }}</div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Merchant/Terminal Info (if available) -->
+    {% if merchant_id or terminal_id %}
+    <div class="rp-section">
+        {% if merchant_id %}
+        <div class="rp-line">
+            <span class="rp-line-label">Merchant ID:</span>
+            <span>{{ merchant_id }}</span>
+        </div>
+        {% endif %}
+        {% if terminal_id %}
+        <div class="rp-line">
+            <span class="rp-line-label">Terminal ID:</span>
+            <span>{{ terminal_id }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Transaction Info -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Transaction ID:</span>
+            <span>#{{ transaction.transaction_number }}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Type:</span>
+            <span>Debit</span>
+        </div>
+    </div>
+
+    <!-- Purchase Title -->
+    <div class="rp-purchase-title">PURCHASE</div>
+
+    <!-- Date and Time -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span>{{ transaction.created_at|date:"m/d/Y" }}</span>
+            <span>{{ transaction.created_at|date:"H:i" }}</span>
+        </div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Member/Card Info -->
+    <div class="rp-section">
+        {% if transaction.member %}
+        <div class="rp-member-info">
+            <div class="rp-line">
+                <span class="rp-line-label">Member:</span>
+                <span>{{ transaction.member.full_name }}</span>
+            </div>
+            {% if transaction.member.rfid_card_number %}
+            <div class="rp-line">
+                <span class="rp-line-label">Card Number:</span>
+                <span>****{{ transaction.member.rfid_card_number|slice:"-4:" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="rp-member-info">
+            <div class="rp-line">
+                <span class="rp-line-label">Card:</span>
+                <span>Debit Card</span>
+            </div>
+        </div>
+        {% endif %}
+        <div class="rp-line">
+            <span class="rp-line-label">Entry Mode:</span>
+            <span>{% if transaction.member %}RFID{% else %}Manual{% endif %}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Response:</span>
+            <span class="rp-response">APPROVED</span>
+        </div>
+        {% if approval_code %}
+        <div class="rp-line">
+            <span class="rp-line-label">Approval Code:</span>
+            <span>{{ approval_code }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Items List -->
+    <div class="rp-section">
+        {% for item in transaction.items.all %}
+        <div class="rp-line">
+            <span>{% if item.quantity > 1 %}{{ item.product_name }} (x{{ item.quantity }}){% else %}{{ item.product_name }}{% endif %}</span>
+            <span>₱{{ item.total_price|currency }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Total Section -->
+    <div class="rp-total-section">
+        <div class="rp-total-row">
+            <span class="rp-total-label">Sub Total:</span>
+            <span class="rp-total-value">₱{{ transaction.vatable_sale|currency }}</span>
+        </div>
+        <div class="rp-total-row">
+            <span class="rp-total-label">Sales Tax:</span>
+            <span class="rp-total-value">₱{{ transaction.vat_amount|currency }}</span>
+        </div>
+        <div class="rp-total-row rp-grand-total">
+            <span>TOTAL (PHP):</span>
+            <span>₱{{ transaction.total_amount|currency }}</span>
+        </div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Payment Method Info -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Paid By:</span>
+            <span>Debit</span>
+        </div>
+        {% if transaction.amount_from_balance > 0 %}
+        <div class="rp-line">
+            <span class="rp-line-label">From Balance:</span>
+            <span>₱{{ transaction.amount_from_balance|currency }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Available Balance and Credit Balance (if member exists) -->
+    {% if transaction.member %}
+    <div class="rp-separator">******************************</div>
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Available Balance:</span>
+            <span>₱{{ transaction.member.available_balance|currency }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Footer -->
+    <div class="rp-thanks">THANK YOU FOR YOUR PURCHASE</div>
+
+</div>
+<script>
+    // Auto-focus print button for keyboard accessibility
+    window.addEventListener('load', function() {
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {
+            printBtn.focus();
+        }
+    });
+    
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+P or Cmd+P to print
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            window.print();
+        }
+        // Escape to close
+        if (e.key === 'Escape') {
+            window.close();
+        }
+    });
+</script>
+</body>
+</html>
+

@@ -1,0 +1,419 @@
+{% load currency_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cash Receipt</title>
+    <style>
+        @page { size: 58mm auto; margin: 2mm; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", monospace;
+            background: #f5f5f5;
+        }
+        @media screen {
+            body {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+        }
+        .receipt-paper {
+            width: 56mm;
+            margin: 0 auto;
+            padding: 2mm;
+            font-size: 11pt;
+            line-height: 1.45;
+            color: #000;
+            background: #fff;
+        }
+        @media screen {
+            .receipt-paper {
+                border: 2px dashed #333;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+        }
+        .rp-center { text-align: center; }
+        .rp-title { 
+            font-size: 15pt; 
+            font-weight: bold; 
+            margin-bottom: 2mm;
+        }
+        .rp-sub { 
+            font-size: 11pt; 
+            margin-bottom: 1mm;
+        }
+        .rp-address {
+            font-size: 11pt;
+            margin-bottom: 1mm;
+        }
+        .rp-phone {
+            font-size: 11pt;
+            margin-bottom: 2mm;
+        }
+        .rp-separator {
+            text-align: center;
+            margin: 2mm 0;
+            font-size: 9pt;
+            letter-spacing: 1px;
+        }
+        .rp-receipt-type {
+            text-align: center;
+            font-size: 15pt;
+            font-weight: bold;
+            margin: 2mm 0;
+        }
+        .rp-items-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 12pt;
+            margin: 2mm 0 1mm 0;
+            padding-bottom: 1mm;
+            border-bottom: 1px solid #000;
+        }
+        .rp-item-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1mm 0;
+            font-size: 11pt;
+        }
+        .rp-item-description {
+            flex: 1;
+            text-align: left;
+        }
+        .rp-item-price {
+            text-align: right;
+            min-width: 30%;
+        }
+        .rp-total-section {
+            margin-top: 2mm;
+        }
+        .rp-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5mm 0;
+            font-size: 11pt;
+        }
+        .rp-total-label {
+            font-weight: bold;
+        }
+        .rp-total-value {
+            font-weight: bold;
+            text-align: right;
+        }
+        .rp-thanks {
+            text-align: center;
+            font-size: 11pt;
+            font-weight: bold;
+            margin-top: 3mm;
+            margin-bottom: 2mm;
+        }
+        .rp-barcode {
+            text-align: center;
+            margin: 2mm 0;
+        }
+        .rp-barcode img {
+            max-width: 100%;
+            height: auto;
+        }
+        .rp-section {
+            margin: 2mm 0;
+        }
+        .rp-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 1mm 0;
+            font-size: 11pt;
+        }
+        .rp-line-label {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-right: 5px;
+        }
+        .print-controls {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        #printBtn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        #printBtn:hover {
+            background-color: #0056b3;
+        }
+        #closeBtn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #closeBtn:hover {
+            background-color: #545b62;
+        }
+
+        .copy-label {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 3mm 0;
+            padding: 2mm 0;
+            border-top: 2px dashed #000;
+            border-bottom: 2px dashed #000;
+        }
+        .copy-separator {
+            text-align: center;
+            margin: 5mm 0;
+            font-size: 9pt;
+            letter-spacing: 2px;
+            border-top: 1px dashed #000;
+            padding-top: 3mm;
+        }
+        @media print {
+            @page { size: 58mm auto; margin: 2mm; }
+            .receipt-paper { width: 56mm !important; }
+            .print-controls { display: none !important; }
+            .copy-separator { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-controls">
+        <button id="printBtn" onclick="window.print()">🖨️ Print Receipt</button>
+        <button id="closeBtn" onclick="window.close()">✕ Close</button>
+    </div>
+<div class="receipt-paper">
+
+    <!-- CUSTOMER COPY -->
+    <div class="copy-label">CUSTOMER COPY</div>
+
+    <!-- Header Section -->
+    <div class="rp-center">
+        <div class="rp-title">{{ shop_name|default:"SHOP NAME" }}</div>
+        <div class="rp-address">{{ shop_address|default:"Address: Lorem Ipsum, 23-10" }}</div>
+        <div class="rp-phone">{{ shop_phone|default:"Telp. 11223344" }}</div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Receipt Type -->
+    <div class="rp-receipt-type">CASH RECEIPT</div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Member Info -->
+    {% if transaction.member %}
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Member:</span>
+            <span>{{ transaction.member.full_name }}</span>
+        </div>
+    </div>
+    <div class="rp-separator">******************************</div>
+    {% endif %}
+
+    <!-- Items Header -->
+    <div class="rp-items-header">
+        <span class="rp-item-description">Description</span>
+        <span class="rp-item-price">Price</span>
+    </div>
+
+    <!-- Items List -->
+    {% for item in transaction.items.all %}
+    <div class="rp-item-row">
+        <span class="rp-item-description">{% if item.quantity > 1 %}{{ item.product_name }} (x{{ item.quantity }}){% else %}{{ item.product_name }}{% endif %}</span>
+        <span class="rp-item-price">₱{{ item.total_price|currency }}</span>
+    </div>
+    {% endfor %}
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Total Section -->
+    <div class="rp-total-section">
+        <div class="rp-total-row">
+            <span class="rp-total-label">Total</span>
+            <span class="rp-total-value">₱{{ transaction.total_amount|currency }}</span>
+        </div>
+        <div class="rp-total-row">
+            <span>Cash</span>
+            <span class="rp-item-price">₱{{ transaction.amount_paid|currency }}</span>
+        </div>
+        {% if change_amount > 0 %}
+        <div class="rp-total-row">
+            <span>Change</span>
+            <span class="rp-item-price">₱{{ change_amount|currency }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Footer -->
+    <div class="rp-thanks">THANK YOU!</div>
+    
+    <!-- Barcode -->
+    <div class="rp-barcode">
+        <svg id="barcode"></svg>
+    </div>
+
+    <!-- Separator between copies -->
+    <div class="copy-separator">═══════════════════════════</div>
+
+    <!-- MERCHANT COPY -->
+    <div class="copy-label">MERCHANT COPY</div>
+
+    <!-- Header Section -->
+    <div class="rp-center">
+        <div class="rp-title">{{ shop_name|default:"SHOP NAME" }}</div>
+        <div class="rp-address">{{ shop_address|default:"Address: Lorem Ipsum, 23-10" }}</div>
+        <div class="rp-phone">{{ shop_phone|default:"Telp. 11223344" }}</div>
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Receipt Type -->
+    <div class="rp-receipt-type">CASH RECEIPT</div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Transaction Number for Merchant -->
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Txn #:</span>
+            <span>{{ transaction.transaction_number }}</span>
+        </div>
+        <div class="rp-line">
+            <span class="rp-line-label">Date:</span>
+            <span>{{ transaction.created_at|date:"m/d/Y H:i" }}</span>
+        </div>
+    </div>
+    <div class="rp-separator">******************************</div>
+
+    <!-- Member Info -->
+    {% if transaction.member %}
+    <div class="rp-section">
+        <div class="rp-line">
+            <span class="rp-line-label">Member:</span>
+            <span>{{ transaction.member.full_name }}</span>
+        </div>
+    </div>
+    <div class="rp-separator">******************************</div>
+    {% endif %}
+
+    <!-- Items Header -->
+    <div class="rp-items-header">
+        <span class="rp-item-description">Description</span>
+        <span class="rp-item-price">Price</span>
+    </div>
+
+    <!-- Items List -->
+    {% for item in transaction.items.all %}
+    <div class="rp-item-row">
+        <span class="rp-item-description">{% if item.quantity > 1 %}{{ item.product_name }} (x{{ item.quantity }}){% else %}{{ item.product_name }}{% endif %}</span>
+        <span class="rp-item-price">₱{{ item.total_price|currency }}</span>
+    </div>
+    {% endfor %}
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Total Section -->
+    <div class="rp-total-section">
+        <div class="rp-total-row">
+            <span class="rp-total-label">Total</span>
+            <span class="rp-total-value">₱{{ transaction.total_amount|currency }}</span>
+        </div>
+        <div class="rp-total-row">
+            <span>Cash</span>
+            <span class="rp-item-price">₱{{ transaction.amount_paid|currency }}</span>
+        </div>
+        {% if change_amount > 0 %}
+        <div class="rp-total-row">
+            <span>Change</span>
+            <span class="rp-item-price">₱{{ change_amount|currency }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="rp-separator">******************************</div>
+
+    <!-- Footer -->
+    <div class="rp-thanks">THANK YOU!</div>
+    
+    <!-- Barcode -->
+    <div class="rp-barcode">
+        <svg id="barcode-merchant"></svg>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+    // Generate barcode from transaction number
+    window.addEventListener('load', function() {
+        try {
+            const txnNumber = '{{ transaction.transaction_number }}';
+            // Clean transaction number for barcode (remove non-alphanumeric)
+            const barcodeValue = txnNumber.replace(/[^A-Za-z0-9]/g, '').substring(0, 20) || '{{ transaction.id }}';
+            JsBarcode("#barcode", barcodeValue, {
+                format: "CODE128",
+                width: 1,
+                height: 40,
+                displayValue: false
+            });
+            // Generate barcode for merchant copy
+            JsBarcode("#barcode-merchant", barcodeValue, {
+                format: "CODE128",
+                width: 1,
+                height: 40,
+                displayValue: false
+            });
+        } catch (e) {
+            console.error('Barcode generation failed:', e);
+        }
+    });
+
+    // Auto-focus print button for keyboard accessibility
+    window.addEventListener('load', function() {
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {
+            printBtn.focus();
+        }
+    });
+    
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+P or Cmd+P to print
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            window.print();
+        }
+        // Escape to close
+        if (e.key === 'Escape') {
+            window.close();
+        }
+    });
+</script>
+</body>
+</html>
+

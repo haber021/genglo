@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Refund | Genglo Printing Services</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --dark:#0f172a;
+            --brand:#1f7a3a;
+            --accent:#0b5f3a;
+            --muted:#94a3b8;
+            --panel:#ffffff;
+            --gradient:linear-gradient(135deg, #1f7a3a 0%, #0b5f3a 40%, #0d9488 100%);
+        }
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header-section {
+            background: var(--gradient);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.2);
+        }
+        .header-section h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header-section p {
+            opacity: 0.95;
+            margin: 0;
+        }
+        .content-card {
+            background: var(--panel);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.1);
+            margin-bottom: 20px;
+        }
+        .search-section {
+            margin-bottom: 30px;
+        }
+        .search-input-wrapper {
+            position: relative;
+        }
+        .search-input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+        .search-input-wrapper input {
+            padding-left: 45px;
+        }
+        .transaction-results {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            display: none;
+        }
+        .transaction-result-item {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .transaction-result-item:hover {
+            background: #f8fafc;
+        }
+        .transaction-result-item:last-child {
+            border-bottom: none;
+        }
+        .transaction-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transaction-info-left {
+            flex: 1;
+        }
+        .transaction-number {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        .transaction-meta {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .transaction-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .selected-transaction {
+            background: #f0fdf4;
+            border: 2px solid var(--brand);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .selected-transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .selected-transaction-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+        .selected-transaction-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .transaction-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            font-size: 0.9rem;
+        }
+        .detail-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .detail-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        .items-list {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+        .item-name {
+            color: var(--dark);
+        }
+        .item-quantity {
+            color: var(--muted);
+            margin-left: 8px;
+        }
+        .item-price {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(31,122,58,0.1);
+        }
+        .btn-primary {
+            background: var(--gradient);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(31,122,58,0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .back-link {
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            transition: opacity 0.2s ease;
+        }
+        .back-link:hover {
+            opacity: 0.8;
+            color: white;
+        }
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+        /* Receipt Modal Styles */
+        .receipt-modal .modal-dialog {
+            max-width: 90%;
+            width: 600px;
+        }
+        .receipt-modal .modal-content {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .receipt-modal .modal-body {
+            padding: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .receipt-modal iframe {
+            width: 100%;
+            border: none;
+            min-height: 500px;
+        }
+        .receipt-modal .modal-header {
+            background: var(--gradient);
+            color: white;
+            border-bottom: none;
+            padding: 15px 20px;
+        }
+        .receipt-modal .modal-header .btn-close {
+            filter: invert(1);
+        }
+        .receipt-modal .modal-footer {
+            border-top: 1px solid #e2e8f0;
+            padding: 15px 20px;
+        }
+        .today-transactions-section {
+            margin-bottom: 30px;
+        }
+        .today-transactions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .today-transactions-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+        .today-transactions-list {
+            display: grid;
+            gap: 12px;
+        }
+        .today-transaction-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .today-transaction-item:hover {
+            background: #f0fdf4;
+            border-color: var(--brand);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(31,122,58,0.1);
+        }
+        .today-transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .today-transaction-number {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        .today-transaction-amount {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        .today-transaction-meta {
+            font-size: 0.85rem;
+            color: var(--muted);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .today-transaction-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <a href="{% url 'user_choice' %}" class="back-link">
+                <i class="bi bi-arrow-left"></i> Back to Menu
+            </a>
+            <h1><i class="bi bi-arrow-counterclockwise me-2"></i>Process Refund</h1>
+            <p>Search for a transaction to process a refund</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="content-card">
+            <div class="search-section">
+                <label class="form-label">Search Transaction</label>
+                <div class="search-input-wrapper">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="transactionSearch" placeholder="Enter transaction number...">
+                </div>
+                <div class="transaction-results" id="transactionResults"></div>
+            </div>
+
+            <div class="selected-transaction" id="selectedTransaction">
+                <div class="selected-transaction-header">
+                    <div>
+                        <div class="selected-transaction-title" id="selectedTransactionNumber"></div>
+                        <div class="transaction-meta" id="selectedTransactionMeta"></div>
+                    </div>
+                    <div class="selected-transaction-amount" id="selectedTransactionAmount"></div>
+                </div>
+
+                <div class="transaction-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Member</div>
+                        <div class="detail-value" id="selectedMemberName"></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Payment Method</div>
+                        <div class="detail-value" id="selectedPaymentMethod"></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Date</div>
+                        <div class="detail-value" id="selectedTransactionDate"></div>
+                    </div>
+                </div>
+
+                <div class="items-list">
+                    <div class="detail-label mb-2">Items:</div>
+                    <div id="selectedTransactionItems"></div>
+                </div>
+
+                <form id="refundForm">
+                    <input type="hidden" id="transactionId" name="transaction_id">
+                    <div class="form-group">
+                        <label for="refundReason" class="form-label">Refund Reason (Optional)</label>
+                        <textarea class="form-control" id="refundReason" name="reason" rows="3" placeholder="Enter reason for refund..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="processRefundBtn">
+                        <i class="bi bi-check-circle me-2"></i>Process Refund
+                    </button>
+                </form>
+                
+                <div id="refundSuccessActions" style="display: none; margin-top: 20px;">
+                    <button type="button" class="btn btn-success w-100" id="printRefundReceiptBtn">
+                        <i class="bi bi-printer me-2"></i>Print Refund Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if today_transactions %}
+        <div class="content-card today-transactions-section">
+            <div class="today-transactions-header">
+                <div class="today-transactions-title">
+                    <i class="bi bi-calendar-day me-2"></i><span id="todayTransactionsTitle">Today's Transactions</span> (<span id="todayTransactionsCount">{{ today_transactions|length }}</span>)
+                </div>
+            </div>
+            <div class="today-transactions-list" id="todayTransactionsList">
+                {% for transaction in today_transactions %}
+                <div class="today-transaction-item" data-transaction-number="{{ transaction.transaction_number }}" onclick="selectTodayTransaction('{{ transaction.transaction_number }}')">
+                    <div class="today-transaction-header">
+                        <div class="today-transaction-number">{{ transaction.transaction_number }}</div>
+                        <div class="today-transaction-amount">₱{{ transaction.total_amount|floatformat:2 }}</div>
+                    </div>
+                    <div class="today-transaction-meta">
+                        <span><i class="bi bi-person"></i> {{ transaction.member_name }}</span>
+                        <span><i class="bi bi-wallet2"></i> {{ transaction.payment_method }}</span>
+                        <span><i class="bi bi-box"></i> {{ transaction.items_count }} item(s)</span>
+                        <span><i class="bi bi-clock"></i> {{ transaction.created_at }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Receipt Print Modal -->
+    <div class="modal fade receipt-modal" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalLabel">
+                        <i class="bi bi-receipt me-2"></i>Refund Receipt
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="receiptModalBody">
+                    <!-- Receipt content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="modalPrintBtn">
+                        <i class="bi bi-printer me-2"></i>Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+
+        let searchTimeout;
+        const transactionSearch = document.getElementById('transactionSearch');
+        const transactionResults = document.getElementById('transactionResults');
+        const selectedTransaction = document.getElementById('selectedTransaction');
+        let selectedTransactionData = null;
+        let lastRefundReceiptData = null;
+
+        // Display current date in the calendar icon section
+        function updateTodayDate() {
+            const todayTitle = document.getElementById('todayTransactionsTitle');
+            if (todayTitle) {
+                const now = new Date();
+                // Format: "Today's Transactions - Friday, December 17, 2025"
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                const dateString = now.toLocaleDateString('en-US', options);
+                todayTitle.textContent = `Today's Transactions - ${dateString}`;
+            }
+        }
+
+        // Update date on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateTodayDate);
+        } else {
+            updateTodayDate();
+        }
+
+        // Search transactions
+        transactionSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                transactionResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search-transactions-for-refund/?q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        displayTransactionResults(data.transactions);
+                    } else {
+                        showAlert(data.error || 'Error searching transactions', 'danger');
+                    }
+                })
+                .catch(err => {
+                    showAlert('Error searching transactions', 'danger');
+                });
+            }, 300);
+        });
+
+        function displayTransactionResults(transactions) {
+            if (transactions.length === 0) {
+                transactionResults.innerHTML = '<div class="transaction-result-item text-center text-muted">No transactions found</div>';
+                transactionResults.style.display = 'block';
+                return;
+            }
+
+            transactionResults.innerHTML = transactions.map(txn => `
+                <div class="transaction-result-item" data-transaction-id="${txn.id}">
+                    <div class="transaction-info">
+                        <div class="transaction-info-left">
+                            <div class="transaction-number">${txn.transaction_number}</div>
+                            <div class="transaction-meta">${txn.member_name} • ${txn.created_at}</div>
+                        </div>
+                        <div class="transaction-amount">₱${parseFloat(txn.total_amount).toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.transaction-result-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const transactionId = this.dataset.transactionId;
+                    const transaction = transactions.find(t => t.id == transactionId);
+                    selectTransaction(transaction);
+                });
+            });
+
+            transactionResults.style.display = 'block';
+        }
+
+        function selectTransaction(transaction) {
+            selectedTransactionData = transaction;
+            transactionResults.style.display = 'none';
+            transactionSearch.value = transaction.transaction_number;
+            
+            // Hide print button when selecting a new transaction
+            document.getElementById('refundSuccessActions').style.display = 'none';
+            lastRefundReceiptData = null;
+
+            // Fetch full transaction details
+            fetch(`/api/search-transactions-for-refund/?q=${encodeURIComponent(transaction.transaction_number)}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.transactions.length > 0) {
+                    const fullTransaction = data.transactions[0];
+                    displaySelectedTransaction(fullTransaction);
+                }
+            })
+            .catch(err => {
+                showAlert('Error loading transaction details', 'danger');
+            });
+        }
+
+        // Function to handle clicking on today's transactions
+        function selectTodayTransaction(transactionNumber) {
+            // Set search input value
+            transactionSearch.value = transactionNumber;
+            
+            // Trigger search to load transaction details
+            fetch(`/api/search-transactions-for-refund/?q=${encodeURIComponent(transactionNumber)}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.transactions.length > 0) {
+                    const transaction = data.transactions[0];
+                    selectTransaction(transaction);
+                    // Scroll to selected transaction section
+                    document.getElementById('selectedTransaction').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    showAlert('Transaction not found', 'warning');
+                }
+            })
+            .catch(err => {
+                showAlert('Error loading transaction details', 'danger');
+            });
+        }
+
+        function displaySelectedTransaction(transaction) {
+            // Update selectedTransactionData with full transaction details
+            selectedTransactionData = transaction;
+            
+            document.getElementById('transactionId').value = transaction.id;
+            document.getElementById('selectedTransactionNumber').textContent = transaction.transaction_number;
+            document.getElementById('selectedTransactionMeta').textContent = `${transaction.items_count} item(s)`;
+            document.getElementById('selectedTransactionAmount').textContent = `₱${parseFloat(transaction.total_amount).toFixed(2)}`;
+            document.getElementById('selectedMemberName').textContent = transaction.member_name;
+            document.getElementById('selectedPaymentMethod').textContent = transaction.payment_method;
+            document.getElementById('selectedTransactionDate').textContent = transaction.created_at;
+            
+            // Display items
+            if (transaction.items && transaction.items.length > 0) {
+                const itemsHtml = transaction.items.map(item => `
+                    <div class="item-row">
+                        <div>
+                            <span class="item-name">${item.product_name}</span>
+                            <span class="item-quantity">x${item.quantity}</span>
+                        </div>
+                        <div class="item-price">₱${parseFloat(item.total_price).toFixed(2)}</div>
+                    </div>
+                `).join('');
+                document.getElementById('selectedTransactionItems').innerHTML = itemsHtml;
+            } else {
+                document.getElementById('selectedTransactionItems').innerHTML = '<div class="text-muted">No items found</div>';
+            }
+            
+            selectedTransaction.style.display = 'block';
+        }
+
+        // Handle refund form submission
+        document.getElementById('refundForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedTransactionData) {
+                showAlert('Please select a transaction first', 'warning');
+                return;
+            }
+
+            const processRefundBtn = document.getElementById('processRefundBtn');
+            processRefundBtn.disabled = true;
+            processRefundBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+            const payload = {
+                transaction_id: document.getElementById('transactionId').value,
+                reason: document.getElementById('refundReason').value.trim()
+            };
+
+            fetch('/api/process-refund/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    // Store receipt data for printing
+                    lastRefundReceiptData = data.receipt;
+                    // Show print button
+                    document.getElementById('refundSuccessActions').style.display = 'block';
+                    // Reset form but keep transaction visible
+                    document.getElementById('refundReason').value = '';
+                    processRefundBtn.disabled = false;
+                    processRefundBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Process Refund';
+                } else {
+                    showAlert(data.error || 'Failed to process refund', 'danger');
+                    processRefundBtn.disabled = false;
+                    processRefundBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Process Refund';
+                }
+            })
+            .catch(err => {
+                showAlert('Error processing refund', 'danger');
+                processRefundBtn.disabled = false;
+                processRefundBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Process Refund';
+            });
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!transactionSearch.contains(e.target) && !transactionResults.contains(e.target)) {
+                transactionResults.style.display = 'none';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.querySelector('.header-section').insertAdjacentElement('afterend', alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Function to reset form back to search state
+        function resetToSearchState() {
+            // Clear search input
+            transactionSearch.value = '';
+            
+            // Hide selected transaction
+            selectedTransaction.style.display = 'none';
+            
+            // Hide refund success actions
+            document.getElementById('refundSuccessActions').style.display = 'none';
+            
+            // Clear form
+            document.getElementById('refundForm').reset();
+            document.getElementById('transactionId').value = '';
+            document.getElementById('refundReason').value = '';
+            
+            // Clear transaction results
+            transactionResults.style.display = 'none';
+            transactionResults.innerHTML = '';
+            
+            // Reset data
+            selectedTransactionData = null;
+            lastRefundReceiptData = null;
+            
+            // Focus back on search input
+            transactionSearch.focus();
+        }
+
+        // Handle print refund receipt
+        document.getElementById('printRefundReceiptBtn').addEventListener('click', function() {
+            // Get transaction ID from form or selected transaction data
+            const transactionId = document.getElementById('transactionId').value || (selectedTransactionData && selectedTransactionData.id);
+            
+            if (!transactionId) {
+                showAlert('No transaction data available', 'warning');
+                return;
+            }
+
+            // Open refund receipt in new window (will auto-print)
+            const receiptUrl = `/refund-receipt/${transactionId}/`;
+            const printWin = window.open(receiptUrl, 'REFUND_RECEIPT_PRINT', 'width=420,height=600,scrollbars=yes');
+            
+            if (!printWin) {
+                showAlert('Popup blocked. Please allow popups for this site to print receipts.', 'warning');
+                return;
+            }
+            
+            // Immediately reset to search state after opening print window
+            setTimeout(() => {
+                resetToSearchState();
+                showAlert('Refund receipt opened. Ready to process another refund.', 'success');
+            }, 300);
+        });
+    </script>
+</body>
+</html>
+
